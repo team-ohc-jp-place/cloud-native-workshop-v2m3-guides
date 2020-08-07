@@ -1,23 +1,22 @@
 The CCN Roadshow(Dev Track) Module 3 Guide 2019
 ===
-This module enables developers to integrate Istio service mesh with exsiting cloud-native application and monitor funtionalities via Kiali, Prometheus, Grafana, and more.
-The developers also will learn how to authenticate the cloud-native apps via Red Hat Single Sign-On server of Red Hat Application Runtimes.
+このモジュールでは、開発者は Istio サービスメッシュを既存のクラウドネイティブアプリケーションと統合し、Kiali, Prometheus, Grafana などを介して機能を監視することができます。
+また、Red Hat Application Runtimes の Red Hat Single Sign-On サーバーを介してクラウドネイティブアプリを認証する方法も学習します。
 
-Agenda
+アジェンダ
 ===
-* Getting Started with Service Mesh
-* Implementing Continuous Delivery
-* Creating Distributed Services
-* Service Visualization and Monitoring
-* Advanced Service Mesh Development
+* サービスメッシュの使用開始
+* 継続的なデリバリーの実装
+* 分散サービスの作成
+* サービスの可視化と監視
+* 高度なサービスメッシュ開発
 
-Lab Instructions on OpenShift
+OpenShift上でのラボインストラクション
 ===
 
-Note that if you have installed the lab infra via APB, the lab instructions are already deployed.
+APB経由でラボインストラをインストールした場合、ラボインストラクションはすでにデプロイされていることに注意してください。
 
-
-_Migration_: the docs have been migrated from markdown to adoc. 
+_Migration_: ドキュメントはmarkdownからadocにマイグレーション済みです。 
 Using pandoc e.g: 
 ``` 
 for i in *.md; do pandoc --standalone --to=asciidoc --output=$i.adoc $i; done;
