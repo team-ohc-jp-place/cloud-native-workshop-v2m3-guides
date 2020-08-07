@@ -1,54 +1,53 @@
-= Creating Distributed Services
+= 分散サービスの作成
 :experimental:
 
-In this lab, we’ll install a sample application into the system. This application is included in Istio itself for demonstrating various aspects of it, but the application isn’t tied exclusively to Istio - it’s an ordinary microservice application that could be installed to any OpenShift instance with or without Istio.
+このラボでは、サンプルアプリケーションをシステムにインストールします。このアプリケーションはIstioの様々な側面をデモするためにIstio自体に含まれていますが、このアプリケーションはIstioだけに縛られているわけではなく、Istioの有無に関わらず任意のOpenShiftインスタンスにインストールできる普通のマイクロサービスアプリケーションです。
 
-The sample application is called _Bookinfo_, a simple application that displays information about a book, similar to a single catalog entry of an online book store. Displayed on the page is a description of the book, book details (ISBN, number of pages, and so on), and a few book reviews.
+サンプルアプリケーションは _Bookinfo_ と呼ばれるもので、オンライン書店のカタログのような本の情報を表示するシンプルなアプリケーションです。ページには、本の説明、本の詳細（ISBN、ページ数など）、書評が表示されます。
 
-The BookInfo application is broken into four separate microservices:
+BookInfo アプリケーションは、4 つの独立したマイクロサービスに分かれています:
 
-<1> *productpage* - The `productpage` microservice calls the `details` and `reviews` microservices to populate the page.
-<2> *details* - The `details` microservice contains book information.
-<3> *reviews* - The `reviews` microservice contains book reviews. It also calls the `ratings` microservice to show a ``star'' rating for each
-book.
-<4> *ratings* - The `ratings` microservice contains book rating
-information that accompanies a book review.
+<1> *productpage* - `productpage` マイクロサービスは `details` と `reviews` マイクロサービスを呼び出してページを作成します。
+<2> *details* - `details` マイクロサービスは本の情報を含みます。
+<3> *reviews* - `reviews` マイクロサービスは書評を含みます。また、`ratings` マイクロサービスを呼び出して、それぞれの本の星の評価を表示します。
+<4> *ratings* - `ratings` マイクロサービスは書評に付随する書籍の評価情報を含みます。
 
-There are 3 versions of the reviews microservice:
+reviewsマイクロサービスには3つのバージョンがあります:
 
-<1> Version `v1` does not call the ratings service.
-<2> Version `v2` calls the ratings service, and displays each rating as 1 to 5 *black* stars.
-<3> Version `v3` calls the ratings service, and displays each rating as 1 to 5 *red* stars.
+<1> バージョン `v1` はレーティングサービスを呼び出しません。
+<2> バージョン `v2` はレーティングサービスを呼び出し、各レーティングを1〜5個の *黒* 星で表示します。
+<3> バージョン `v3` はレーティングサービスを呼び出し、各レーティングを1〜5個の *赤* 星で表示します。
 
-The application architecture is described in the below diagram:
+アプリケーションのアーキテクチャを以下の図で説明します:
 
 image::istio_bookinfo.png[Bookinfo Architecture, 700]
 
-=== 1. Deploy Bookinfo Application
+=== 1. Bookinfoアプリケーションのデプロイ
 
 First, open a new browser with the link:{{ CONSOLE_URL }}[OpenShift web console^]
+まず、リンク先の {{ CONSOLE_URL }}[OpenShift web console^] で新しいブラウザを開きます。
 
 image::openshift_login.png[openshift_login, 700]
 
-Login using:
+以下でログインします:
 
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
-You will see a list of projects to which you have access:
+アクセスできるプロジェクトのリストが表示されます:
 
 image::openshift_landing.png[openshift_landing, 700]
 
-The project displayed on the landing page depends on which labs you will run today. If you will develop `Service Mesh and Identity` then you will see pre-created projects as shown in the above screeenshot.
+ランディングページに表示されるプロジェクトは、今日実行するラボによって異なります。 `Service Mesh and Identity` を開発する場合は、上の画像のようにあらかじめ作成されたプロジェクトが表示されます。
 
-Although your CodeReady workspace is running on the Kubernetes cluster, it’s running with a default restricted _Service Account_ that prevents you from creating most resource types. If you’ve completed other modules, you’re probably already logged in, but let’s login again: click on *Login to OpenShift*, and enter your given credentials:
+CodeReadyワークスペースはKubernetesクラスタ上で実行されていますが、デフォルトの制限付き _Service Account_ で実行されているため、ほとんどのリソースタイプを作成することができません。他のモジュールを完了している場合は、おそらくすでにログインしていると思いますが、もう一度ログインしてみましょう: *Login to OpenShift* をクリックして、与えられたクレデンシャルを入力します:
 
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
 image::cmd-login.png[login,700]
 
-You should see something like this (the project names may be different):
+このようなものが表示されるはずです（プロジェクト名が異なる場合があります）:
 
 [source,none]
 ----
@@ -70,19 +69,20 @@ Welcome! See 'oc help' to get started.
 [NOTE]
 ====
 After you log in using *Login to OpenShift*, the terminal is no longer usable as a regular terminal. You can close the terminal window. You will still be logged in when you open more terminals later!
+*OpenShiftへのログイン* でログインした後は、通常のターミナルとして使用できなくなります。ターミナルのウィンドウを閉じることができます。後からさらに端末を開いてもログインしたままになります。
 ====
 
 #####  ServiceMeshMemberRoll
-Before we start depoying our application we need to make sure we have the right access to our different application namespaces. The _ServiceMeshControlPlane_ that includes _Elasticsearch_, _Jaeger_, _Kiali_ and _Service Mesh Operators_, have all been installed at the cluster provisioning time. However for applications to communicate to each other accross different namespaces, we need to ensure that the _ServiceMeshMemberRoll_ is also created.
+アプリケーションをデプロイする前に、異なるアプリケーションのネームスペースに正しくアクセスできることを確認する必要があります。_Elasticsearch_, _Jaeger_, _Kiali_, _Service Mesh Operators_ を含む _ServiceMeshControlPlane_ は全てクラスタのプロビジョニング時にインストールされています。しかし、アプリケーションが異なるネームスペースをまたいで通信するためには、_ServiceMeshMemberRoll_ も作成されていることを確認する必要があります。
 
-Let's create the _ServiceMeshMemberRoll_
+_ServiceMeshMemberRoll_ を作成しましょう。
 
-- Login to the openshift console link:{{CONSOLE_URL}}[OpenShift web console^]
-- Press the plus sign on the right top corner as shown in the picture.
+- openshiftコンソールへのログイン link:{{CONSOLE_URL}}[OpenShift web console^]
+- 画像のように右上隅のプラス記号を押します。
 
 image::plussigntop_ocpconsole.png[Run yaml in console, 700]
 
-- Select your namespace `{{ USER_ID }}-istio-system` on the top left; as shown in the picture and paste the below _ServiceMeshMemberRoll_ YAML code into the editor.
+- 図のように左上の名前空間 `{{ USER_ID }}-istio-system` を選択し、以下の _ServiceMeshMemberRoll_ YAML コードをエディタに貼り付けてください。
 
 [source, yaml, role="copypaste"]
 ----
@@ -97,56 +97,56 @@ spec:
     - {{ USER_ID }}-catalog
     - {{ USER_ID }}-inventory
 ----
-<1> is the istio-system namespace which will hold the _ServiceMeshMemberRoll_ and a bunch of other service mesh related objects.
-<2> is the list of projects that will be part of this _ServiceMesh_; in our case that's the application spread in three different namespaces/projects.
+<1> は、_ServiceMeshMemberRoll_ とその他のサービスメッシュ関連オブジェクトを保持する istio-system 名前空間です。
+<2> はこの _ServiceMesh_ の一部となるプロジェクトのリストです。このケースではアプリケーションは3つの名前空間(プロジェクト)にまたがっています。
 
 image::smmr_yaml_create.png[Run yaml in console, 700]
 
-- Click **Create**. This should create the required _ServiceMeshMemberRoll_
+- Create**をクリックします。これで必要な _ServiceMeshMemberRoll_ が作成されます。
 
-Congratulations now we have successfully created a _ServiceMeshMemberRoll_ which will cause a new service mesh to be deployed into the `{{ USER_ID }}-istio-system` project. let's move on to deploy our application to our service mesh.
+おめでとうございます! これで新しいサービスメッシュのデプロイ先プロジェクト `{{ USER_ID }}-istio-system` に _ServiceMeshMemberRoll_ を作成することに成功しました。
+それでは、アプリケーションをサービスメッシュにデプロイしていきましょう。
 
-#####  Deploying BookInfo App
+##### BookInfoアプリのデプロイ
 
-Open a terminal via CodeReady Workspaces and run the following commands to deploy the bookinfo app:
+CodeReady Workspaces経由でターミナルを開き、以下のコマンドを実行してbookinfoアプリをデプロイします:
 
 [source,shell, role="copypaste"]
 ----
 oc apply -n {{ USER_ID}}-bookinfo -f /projects/cloud-native-workshop-v2m3-labs/istio/bookinfo.yaml
 ----
 
-And then create the _ingress gateway_ for Bookinfo:
+そして、Bookinfo用の_ingress gateway_を作成します:
 
 [source,shell, role="copypaste"]
 ----
 oc apply -n {{ USER_ID}}-bookinfo -f /projects/cloud-native-workshop-v2m3-labs/istio/bookinfo-gateway.yaml
 ----
 
-The above default ingress manages traffic for any incoming host, but we only want it to manage traffic destined to our own ingress, so change the host from '*' to your specific host with this command:
+上記のデフォルトのingressは、任意の着信ホストのトラフィックを管理しますが、自分のingress宛のトラフィックだけを管理したいので、このコマンドでホストを'*'から特定のホストに変更してください:
 
 [source,sh,role="copypaste"]
 ----
 oc patch -n {{USER_ID}}-bookinfo virtualservice/bookinfo --type='json' -p '[{"op":"add","path":"/spec/hosts","value": ["istio-ingressgateway-{{USER_ID}}-istio-system.{{ROUTE_SUBDOMAIN}}"]}]'
 ----
 
-Finally, add default destination rules (we’ll alter this later to affect routing
-of requests):
+最後に、デフォルトのデスティネーションルールを追加します (これはリクエストのルーティングに影響を与えるために後で変更します)。
 
 [source,shell, role="copypaste"]
 ----
 oc apply -n {{ USER_ID}}-bookinfo -f /projects/cloud-native-workshop-v2m3-labs/istio/destination-rule-all.yaml
 ----
 
-List all available destination rules:
+利用可能なすべてのデスティネーションルールをリストアップします:
 
 [source,shell, role="copypaste"]
 ----
 oc get -n {{ USER_ID}}-bookinfo destinationrules
 ----
 
-When the app is installed, each Pod will get an additional _sidecar_ container as described earlier.
+アプリがインストールされると、各Podは前述のように追加の _sidecar_ コンテナを取得します。
 
-Add some nice labels to correspond to the different langages/frameworks used in the app:
+アプリで使用されている異なる言語/フレームワークに対応するために、いくつかの素敵なラベルを追加します:
 
 [source,sh,role="copypaste"]
 ----
@@ -169,11 +169,12 @@ oc annotate deployment reviews-v3 app.openshift.io/connects-to=ratings-v1
 ----
 
 Let’s wait for our application to finish deploying. Go to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-bookinfo[Topology View^] for the `{{USER_ID}}-bookinfo` project. You'll see the app components spinning up:
+アプリケーションのデプロイが終わるのを待ちましょう。プロジェクトの {{{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-bookinfo[Topology View^] に移動します。アプリのコンポーネントが起動中であることがわかります:
 
 image::bookinfo_topology.png[Bookinfo App, 700]
 
-Wait for each component to have the full blue circles,
-or you can execute the following commands to wait for the deployment to complete and result `successfully rolled out`:
+各コンポーネントが完全な青丸になるのを待ちます。
+または、以下のコマンドを実行してデプロイが完了して `successfully rolled out` の結果が出るのを待つこともできます:
 
 [source,shell,role="copypaste"]
 ----
@@ -185,11 +186,11 @@ or you can execute the following commands to wait for the deployment to complete
  oc rollout status -n {{ USER_ID}}-bookinfo -w deployment/ratings-v1
 ----
 
-Finally, access the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^]. It should look something like:
+最後に、http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^]にアクセスします。以下のようになっているはずです:
 
 image::bookinfo.png[Bookinfo App, 700]
 
-Reload the page multiple times. The three different versions of the Reviews service show the star ratings differently - _v1_ shows no stars at all, _v2_ shows black stars, and _v3_ shows red stars:
+ページを複数回リロードしてください。レビューサービスの3つの異なるバージョンでは、星の表示が異なります - _v1_ では星が全く表示されず、 _v2_ では黒い星が表示され、 _v3_ では赤い星が表示されます:
 
 * *v1*
 
@@ -203,16 +204,16 @@ image::stars-black.png[black stars, 700]
 
 image::stars-red.png[red stars, 700]
 
-That’s because there are 3 versions of reviews deployment for our reviews service. Istio’s load-balancer is using a _round-robin_ algorithm to iterate through the 3 instances of this service.
+それは、レビューサービスには3つのバージョンのレビューのデプロイがあるからです。Istio のロードバランサーは _round-robin_ アルゴリズムを使用して、このサービスの 3 つのインスタンスを反復処理しています。
 
-You should now have your OpenShift Pods running and have an _Envoy sidecar_ in each of them alongside the microservice. The microservices are productpage, details, ratings, and reviews. Note that you’ll have three versions of the reviews microservice:
+これでOpenShiftのPodを実行して、それぞれのPodにマイクロサービスと並んで _Envoyのサイドカー_ があるはずです。マイクロサービスは productpage、details、reviewsです。レビューマイクロサービスには3つのバージョンがあることに注意してください:
 
 [source,shell, role="copypaste"]
 ----
 oc get pods -n {{ USER_ID}}-bookinfo --selector app=reviews
 ----
 
-The output from the above command should be similar but not the same, since pod names should be different.
+上記コマンドの出力は、ポッド名が異なるため、似ているはずですが、完全に同じではありません。
 
 [source,sh]
 ----
@@ -222,8 +223,8 @@ reviews-v2-69fd995884-qpddl   2/2     Running   0          12m
 reviews-v3-5f9d5bbd8-sz29k    2/2     Running   0          12m
 ----
 
-Notice that each of the microservices shows *2/2* containers ready for each service (one for the service and one for its sidecar).
+各マイクロサービスには、各サービスのために *2/2* コンテナが用意されていることに注目してください(1つはサービス用、もう1つはサイドカー用)。
 
-Now that we have our application deployed and linked into the Istio service mesh, let’s take a look at the immediate value we can get out of it without touching the application code itself!
+アプリケーションがデプロイされ、Istioサービスメッシュにリンクされたので、アプリケーションコード自体に触れることなく、すぐに得られる価値を見てみましょう！ 
 
-*Congratulations!* You now successfully deployed your first application within your OpenShift Service Mesh. Lets move to the next lab _Service Visulization and Montioring_
+*おめでとうございます!* これで、OpenShift Service Mesh内に最初のアプリケーションが正常にデプロイされました。次のラボ _Service Visulization and Montioring_ に移りましょう。
