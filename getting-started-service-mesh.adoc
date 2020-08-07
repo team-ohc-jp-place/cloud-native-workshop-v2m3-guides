@@ -1,83 +1,84 @@
-= Service Mesh and Identity
+= サービスメッシュとアイデンティティ
 :experimental:
 
-In this module, you will learn how to prevent cascading failures in a distributed environment, how to detect misbehaving services, and how to avoid having to implement resiliency and monitoring in your business logic. As we transition our applications towards a distributed architecture with microservices deployed across a distributed
-network, many new challenges await us.
+このモジュールでは、分散環境でのカスケード障害を防ぐ方法、サービスの誤動作を検出する方法、ビジネスロジック内にに回復力と監視を埋め込むことを回避する方法を学びます。分散ネットワーク上にマイクロサービスを配置した分散アーキテクチャへとアプリケーションを移行する際には、多くの新しい課題が待ち受けています。
 
-Technologies like containers and container orchestration platforms like OpenShift solve the deployment of our distributed applications quite well, but some challenges remain with distributed apps:
+コンテナやOpenShiftのようなコンテナオーケストレーションプラットフォームのような技術は、分散アプリケーションのデプロイメントを非常にうまく解決してくれますが、分散アプリケーションにはいくつかの課題が残っています:
 
-* Unpredictable failure modes
-* Verifying end-to-end application correctness
-* Unexpected system degradation
-* Continuous topology changes
-* The use of elastic/ephemeral/transient resources
+* 予測不可能な故障モード
+* エンドツーエンドのアプリケーションの正確性の検証
+* 予期せぬシステムの劣化
+* 連続的なトポロジーの変化
+* 伸縮性のある/揮発性の/過渡的な資源の使用
 
-Today, developers are responsible for taking into account these challenges, and do things like:
+今日では、開発者はこれらの課題を考慮して、次のようなことをする責任があります:
 
-* Circuit breaking and Bulkheading (e.g. with Netfix Hystrix)
-* Timeouts/retries
-* Service discovery (e.g. with Eureka)
-* Client-side load balancing (e.g. with Netfix Ribbon)
+* サーキットブレーキングとバルクヘディング (例: Netfix Hystrix)
+* タイムアウト/リトライ
+* サービスディスカバリー（例：Eureka)
+* クライアント側のロードバランシング (Netfix Ribbon)
 
-Another challenge is each runtime and language addresses these with different libraries and frameworks, and in some cases there may be no implementation of a particular library for your chosen language or runtime.
+もう一つの課題は、ランタイムや言語ごとに異なるライブラリやフレームワークを使用してこれらの問題に対処することで、選択した言語やランタイムに特定のライブラリの実装がない場合もあります。
 
-In this section we'll explore how to use the OpenShift _Service Mesh_. Service Mesh is based on the _Istio_ open source project. It enables a much more robust, reliable, and resilient application in the face of the new world of dynamic distributed applications.
+このセクションでは、OpenShiftの _Service Mesh_ の使い方を探っていきます。Service Meshはオープンソースプロジェクトの _Istio_ をベースにしています。これにより、ダイナミックな分散アプリケーションの新しい世界に直面した際に、はるかに堅牢で信頼性が高く、回復力のあるアプリケーションを実現します。
 
-=== What is Istio?
+=== Istioとは何か?
 
 image::istio-logo.png[Logo, 600, align="center"]
 
-http://istio.io[Istio^] forms the basis for the OpenShift Service Mesh and is an open, platform-independent service mesh designed to manage communications between microservices and applications in a transparent way. It provides behavioral insights and operational control over the service mesh as a whole. It provides a number of key capabilities uniformly across a network of services:
+http://istio.io[Istio^] はOpenShift Service Meshの基盤を形成し、マイクロサービスとアプリケーション間の通信を透過的に管理するために設計されたオープンでプラットフォームに依存しないサービスメッシュです。これにより、サービスメッシュ全体のモニタリングと運用制御が可能になります。サービスのネットワーク全体で統一された多数の主要機能を提供します。
 
-* *Traffic Management* - Control the flow of traffic and API calls between services, make calls more reliable, and make the network more robust in the face of adverse conditions.
-* *Observability* - Gain understanding of the dependencies between services and the nature and flow of traffic between them, providing the ability to quickly identify issues.
-* *Policy Enforcement* - Apply organizational policy to the interaction between services, ensure access policies are enforced and resources are fairly distributed among consumers. Policy changes are made by configuring the mesh, not by changing application code.
-* *Service Identity and Security* - Provide services in the mesh with a verifiable identity and provide the ability to protect service traffic as it flows over networks of varying degrees of trustability.
+* *トラフィック管理* - サービス間のトラフィックとAPIコールの流れを制御し、コールの信頼性を高め、悪条件に直面してもネットワークをより強固なものにします。
+* *Observability(可観測性)* - サービス間の依存関係、サービス間のトラフィックの性質と流れを理解し、問題を迅速に特定する能力を提供します。
+* *ポリシー適用* - サービス間の相互作用に組織ポリシーを適用し、アクセスポリシーが適用¥され、コンシューマー間でリソースが公平に分配されるようにします。ポリシーの変更は、アプリケーション・コードを変更するのではなく、メッシュを設定することで行われます。
+* *サービスのアイデンティティとセキュリティ* - メッシュ内のサービスに検証可能なアイデンティティを提供し、信頼性の度合いが異なるネットワーク上を流れるサービストラフィックを保護する機能を提供します。
 
-These capabilities greatly decrease the coupling between application code, the underlying platform, and policy. This decreased coupling not only makes services easier to implement, but also makes it simpler for operators to move application deployments between environments or to new policy schemes. Applications become inherently more portable as a result.
+これらの機能により、アプリケーションコード、基盤となるプラットフォーム、およびポリシー間の結合が大幅に減少します。この結合が減少することで、サービスの実装が容易になるだけでなく、オペレータが環境間でアプリケーションを移動したり、新しいポリシースキームに移行したりするのがより簡単になります。その結果、アプリケーションは本質的に移植性が高くなります。
 
-Sounds fun, right? Let’s get started!
+楽しそうでしょ? さっそく始めましょう!
 
-=== Getting Ready for the labs
+=== ラボの準備
 
-If you've already worked on prior labs today, you'll be familiar with the CodeReady Workspaces environment and can skip down to the *Import Project* section below.
+すでに今日のラボに取り組んでいる方は、CodeReady Workspaces環境に慣れていると思いますので、下の *Import Project* セクションまでスキップしてください。
 
-You will be using Red Hat CodeReady Workspaces, an online IDE based on https://www.eclipse.org/che/[Eclipe Che^]. *Changes to files are auto-saved every few seconds*, so you don’t need to explicitly save changes.
+https://www.eclipse.org/che/[Eclipe Che^] をベースにしたオンラインIDEであるRed Hat CodeReady Workspacesを使用します。 *ファイルへの変更は数秒ごとに自動保存されます* ので、明示的に変更を保存する必要はありません。
 
-To get started, {{ ECLIPSE_CHE_URL }}[access the CodeReady Workspaces instance^] and log in using the username and password you’ve been assigned (e.g. `{{ USER_ID }}/{{ CHE_USER_PASSWORD }}`):
+開始するには、 {{ ECLIPSE_CHE_URL }}[CodeReady Workspacesインスタンスにアクセス^] し、割り当てられたユーザー名とパスワード(例: `{{ USER_ID }}/{{ CHE_USER_PASSWORD }}` )を使用してログインします。
 
 image::che-login.png[cdw, 700]
 
-Once you log in, you’ll be placed on your personal dashboard. Click on the name of the pre-created workspace on the left, as shown below (the name will be different depending on your assigned number). You can also click on the name of the workspace in the center, and then click on the green {{ USER_ID}}-namespace that says _Open_ on the top right hand side of the screen.
+ログインすると、個人のダッシュボードが表示されます。以下のように、左側にあるあらかじめ作成されたワークスペースの名前をクリックします（割り当てられた番号によって名前が異なります）。また、中央のワークスペースの名前をクリックし、画面右上の _Open_ と書かれた緑色の {{ USER_ID}}-名前空間 をクリックします。
 
 image::che-landing.png[cdw, 700]
 
-After a minute or two, you’ll be placed in the workspace:
+1～2分後にはワークスペースが開きます:
 
 image::che-workspace.png[cdw, 600, align="center"]
 
-This IDE is based on Eclipse Che (which is in turn based on MicroSoft VS Code editor).
+このIDEはEclipse Cheをベースにしています(すなわちMicroSoft VS Code editorをベースにしているということでもあります)。
 
-You can see icons on the left for navigating between project explorer, search, version control (e.g. Git), debugging, and other plugins.  You’ll use these during the course of this workshop. Feel free to click on them and see what they do:
+左側には、プロジェクトエクスプローラ、検索、バージョン管理（Gitなど）、デバッグ、その他のプラグインの間をナビゲートするためのアイコンがあります。 あなたはこのワークショップの間にこれらを使用します。自由にクリックして何ができるか見てみてください:
 
 image::crw-icons.png[cdw, 400, align="center"]
 
 [NOTE]
 ====
-If things get weird or your browser appears, you can simply reload the browser tab to refresh the view.
+動作がおかしくなったりした場合には、ブラウザタブをリロードして表示を更新してみてください。
 ====
 
-Many features of CodeReady Workspaces are accessed via *Commands*. You can see a few of the commands listed with links on the home page (e.g. _New File.._, _Git Clone.._, and others).
+CodeReady Workspaces の多くの機能は *Commands* からアクセスできます。いくつかのコマンドは、ホームページにリンク付きで表示されています（例：_New File..._, _Git Clone..._, など）。
 
 If you ever need to run commands that you don't see in a menu, you can press kbd:[F1] to open the command window, or the more traditional kbd:[Control+SHIFT+P] (or kbd:[Command+SHIFT+P] on Mac OS X).
+メニューにないコマンドを実行したい場合は、 kbd:[F1] を押してコマンドウィンドウを開くか、 kbd:[Control+SHIFT+P] (Mac OS X では kbd:[Command+SHIFT+P] ) を押してコマンドを実行することができます。
 
-==== Import project
+==== プロジェクトのインポート
 
 Let's import our first project. Click on **Git Clone..** (or type kbd:[F1], enter 'git' and click on the auto-completed _Git Clone.._ )
+最初のプロジェクトをインポートしてみましょう。 **Git Clone...** をクリックします (または kbd:[F1] と入力して 'git' と入力し、自動補完された _Git Clone..._ をクリックします)。
 
 image::che-workspace-gitclone.png[cdw, 600, align="center"]
 
-Step through the prompts, using the following value for **Repository URL**. If you use *FireFox*, it may end up pasting extra spaces at the end, so just press backspace after pasting:
+プロンプトの指示に従って、 **リポジトリURL** に次の値を使用してください。 *FireFox* を使用している場合、最後に余分なスペースを貼り付けてしまう可能性があるので、貼り付けた後はバックスペースを押してください:
 
 [source, shell, role="copypaste"]
 ----
@@ -88,28 +89,28 @@ https://github.com/RedHat-Middleware-Workshops/cloud-native-workshop-v2m3-labs.g
 
 image::crw-clone-repo.png[crw, 600, align="center"]
 
-The project is imported into your workspace and is visible in the project explorer after clicking the *Explorer* pane at the upper right:
+プロジェクトはワークスペースにインポートされ、右上の *エクスプローラ* ペインをクリックすると、プロジェクト エクスプローラに表示されます:
 
 image::crw-clone-explorer.png[crw, 600, align="center"]
 
-==== IMPORTANT: Check out proper Git branch
+==== 重要: 適切な Git ブランチをチェックアウトしてください
 
-To make sure you're using the right version of the project files, run this command in a CodeReady Terminal:
+プロジェクトファイルの正しいバージョンを使用していることを確認するには、CodeReadyターミナルでこのコマンドを実行してください:
 
 [source,sh,role="copypaste"]
 ----
 cd $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs && git checkout ocp-4.5
 ----
 
-=== Remove other projects
+=== 他のプロジェクトの削除
 
-If you've completed other modules today (such as `cloud-native-workshop-v2m1-labs`), remove them from your workspace by right-clicking on the project name in the explorer and choose *Delete* and accept the warning. Be sure not to delete the new project you just imported for this lab!
+もし今日、他のモジュール(例えば `cloud-native-workshop-v2m1-lab`)を完了している場合は、エクスプローラでプロジェクト名を右クリックして *Delete* を選択し、警告を受け入れてワークスペースからそれらを削除してください。このラボのためにインポートした新しいプロジェクトを削除しないように注意してください。
 
 image::remove-workspace.png[remove, 700]
 
 [NOTE]
 ====
-The Terminal window in CodeReady Workspaces. You can open a terminal window for any of the containers running in your Developer workspace. For the rest of these labs, anytime you need to run a command in a terminal, you can use the **>_ New Terminal** command on the right:
+CodeReady ワークスペースのターミナルウィンドウについて。Developer ワークスペースで実行しているコンテナのいずれかのターミナルウィンドウを開くことができます。これらのラボの残りの部分については、ターミナルでコマンドを実行する必要がある場合はいつでも、右側の **>_New Terminal** コマンドを使用できます:
 ====
 
 image::codeready-workspace-terminal.png[codeready-workspace-terminal, 600, align="center"]
