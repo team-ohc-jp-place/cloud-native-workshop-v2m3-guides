@@ -1,24 +1,23 @@
-= Lab 3 - Advanced Service Mesh Development
+= Lab 3 - サービスメッシュの高度なデプロイメント
 :experimental:
 
-In this lab, we will learn the advanced usecases of service mesh. The lab showcases features:
+このラボでは、サービスメッシュの高度な使用例を学びます。ラボでは以下の機能を紹介します:
 
-* Fault Injection
-* Traffic Shifting
-* Circuit Breaking
-* Rate Limiting
+* フォルトインジェクション (Fault Injection)
+* トラフィックシフト (Traffic Shifting)
+* サーキットブレーカー (Circuit Breaking)
+* レートリミット (Rate Limiting)
 
-These features are important for any distributed applications built on top of Kubernetes/Openshift. We use a different set of microservices that you will be building and deploying. Our applicaiton is called the _Coolstore microservice_ developed in prior labs (i.e Catalog, Inventory) that you developed and deployed to
-OpenShift cluster in _Module 1_ or/and _Module 2_.
+これらの機能は、Kubernetes/Openshiftの上に構築されたあらゆる分散アプリケーションにとって重要です。ここでは、これからビルドおよびデプロイを行うマイクロサービスの異なる組み合わせを利用します。私たちのアプリケーションは前のラボで開発した _Coolstore microservice_ と呼ばれるもの(Catalog、Inventoryなど)で、 _Module 1_ または _Module 2_ で開発してOpenShiftクラスタにデプロイしたものです。
 
 [WARNING]
 ====
-If you have already deployed the _inventory_ and _catalog_ microservices from Module 1, you can skip this step and move to section "1. Enabling automatic sidecar injection"
+モジュール 1 で _inventory_ と _catalog_ マイクロサービスを既にデプロイしている場合は、このステップをスキップして「1. サイドカーの自動インジェクションを有効にする」のセクションに進んでください。
 ====
 
-**In case you haven’t done Module 1 or Module 2 today**, or you didn’t quite complete them, you should deploy the coolstore application and microservices by executing the following shell scripts in CodeReady Workspaces Terminal:
+**今日はモジュール1やモジュール2を実施していない場合** 、またはモジュール1やモジュール2を完全に終わらせていない場合は、CodeReady Workspaces Terminalで以下のシェルスクリプトを実行して、coolstoreアプリケーションとマイクロサービスをデプロイしてください:
 
-The following script will deploy the inventory service:
+次のスクリプトでinventoryサービスをデプロイします:
 
 [source, shell, role="copypaste"]
 ----
@@ -28,7 +27,7 @@ sh $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/istio/scripts/deploy-catal
 
 [WARNING]
 ====
-It sometimes takes time to create a new build image for network latency in OpenShift. So if you got failed to deploy catalog-service with *Error from server (NotFound): services "catalog-springboot" not found*. Please try again with delay via the following command:
+OpenShiftではネットワークレイテンシのため、新しいビルドイメージの作成に時間がかかることがあります。そのため、 *Error from server (NotFound): services "catalog-springboot" not found* でカタログサービスのデプロイに失敗した場合には、少し待ってから、以下のコマンドを使ってもう一度試してみてください:
 ====
 
 [source, sh, role="copypaste"]
@@ -37,29 +36,29 @@ sh $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/istio/scripts/deploy-inven
 sh $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/istio/scripts/deploy-catalog.sh {{ USER_ID }} 3m
 ----
 
-Wait for the commands to complete. This will build and deploy the _inventory_ and _catalog_ components into their own namespaces. They won’t automatically get Istio sidecar proxy containers yet, but you’ll add that in the next step!
+コマンドが完了するのを待ちます。これで _inventory_ と _catalog_ コンポーネントがビルドされ、それぞれのネームスペースにデプロイされます。これらのコンポーネントはまだ自動的には Istio sidecar プロキシコンテナを取得しませんが、次のステップで追加します!
 
-=== 1. Enabling automatic sidecar injection
+=== 1. サイドカーの自動インジェクションを有効にする
 
-Red Hat OpenShift Service Mesh relies on a proxy sidecar within the application’s pod to provide Service Mesh capabilities to the application. You can enable automatic sidecar injection or manage it manually. Red Hat recommends automatic injection using the annotation with no need to label projects. This ensures that your application contains the appropriate configuration for the Service Mesh upon deployment. This method requires fewer privileges and does not conflict with other OpenShift capabilities such as builder pods.
+Red Hat OpenShift Service Mesh は、アプリケーションのポッド内のプロキシサイドカーに依存して、アプリケーションに Service Mesh 機能を提供します。サイドカーの自動インジェクションを有効にするか、手動で管理することができます。Red Hat は、プロジェクトにラベルを付ける必要のない、アノテーションを使用した自動インジェクションを推奨しています。これにより、デプロイ時にアプリケーションに Service Mesh 用の適切な設定が含まれていることが保証されます。この方法では、必要な権限が少なく、ビルダーポッドなどの他のOpenShift機能と競合しません。
 
 [NOTE]
 ====
-The upstream version of Istio injects the sidecar by default if you have labeled the project. Red Hat OpenShift Service Mesh requires you to opt in to having the sidecar automatically injected to a deployment, so you are not required to label the project. This avoids injecting a sidecar if it is not wanted (for example, in build or deploy pods).
+アップストリームバージョンの Istio では、プロジェクトにラベルを付けている場合、デフォルトでサイドカーがインジェクトされます。Red Hat OpenShift Service Meshでは、サイドカーが自動的にデプロイメントにインジェクトされるようにオプトインする必要があるため、プロジェクトにラベルを付ける必要はありません。これにより、サイドカーを必要としない場合（ビルドやデプロイポッドなど）にサイドカーをインジェクトすることを避けることができます。
 
-The webhook checks the configuration of pods deploying into all projects to see if they are opting in to injection with the appropriate annotation.
+webhook は、すべてのプロジェクトにデプロイするポッドの設定をチェックして、適切なアノテーションでインジェクションをオプトインしているかどうかを確認します。
 ====
 
-==== Confirm `inventory` and `catalog` services are running
+==== `inventory` と `catalog` サービスが動作していることを確認
 
-First, confirm you have running inventory service and associated database with the following command:
+まず、以下のコマンドで catalog サービスと関連データベースが実行されていることを確認します:
 
 [source,sh,role="copypaste"]
 ----
 oc get pods -n {{USER_ID}}-catalog --field-selector status.phase=Running
 ----
 
-You should see two pods running (one for the service, and one for its database):
+2つのポッドが起動しているのがわかるはずです (1つはサービス用、もう1つはデータベース用):
 
 [source,console]
 ----
@@ -68,14 +67,14 @@ catalog-database-1-p5hcd     1/1     Running   0          6m4s
 catalog-springboot-1-jdrfs   1/1     Running   0          5m
 ----
 
-Do the same for inventory:
+inventoryに対しても同様にします:
 
 [source,sh,role="copypaste"]
 ----
 oc get pods -n {{USER_ID}}-inventory --field-selector status.phase=Running
 ----
 
-You should again see two pods running (one for the service, and one for its database):
+再び、2つのポッドが実行されているのが確認できるはずです (1つはサービス用、もう1つはデータベース用):
 
 [source,console]
 ----
@@ -84,13 +83,13 @@ inventory-1-87smf            1/1     Running   0          3m12s
 inventory-database-1-6tvxs   1/1     Running   0          5m16s
 ----
 
-==== Add sidecars
+==== サイドカーの追加
 
-OpenShift Service Mesh requires that applications "opt-in" to being part of a service mesh by default. To "opt-in" an app, you need to add an annotation which is a flag to istio to attach a sidecar and bring the app into the mesh.
+OpenShift Service Meshでは、デフォルトではアプリケーションがサービスメッシュの一部になることを「オプトイン」する必要があります。アプリを「オプトイン」するには、istio にサイドカーをアタッチしてアプリをメッシュに取り込むためのフラグであるアノテーションを追加する必要があります。
 
-Rather than manually adding the annotations necessary to inject istio sidecars, run the following commands to add the annotations which will trigger a sidecar to be injected into our _inventory_ and _catalog_ microservices, as well as their associated databases.
+istioサイドカーをインジェクトするために必要なアノテーションを手動で追加するのではなく、以下のコマンドを実行して _inventory_ と _catalog_ のマイクロサービスとそれらに関連するデータベースにアノテーションを追加し、サイドカーのインジェクションがトリガされるようにします。
 
-First, do the databases and wait for them to be re-deployed:
+まず、データベースにアノテーションを設定して、再デプロイされるのを待ちます:
 [source,sh,role="copypaste"]
 ----
 oc patch dc/inventory-database -n {{USER_ID}}-inventory --type='json' -p '[{"op":"add","path":"/spec/template/metadata/annotations", "value": {"sidecar.istio.io/inject": "'"true"'"}}]' && \
@@ -99,14 +98,14 @@ oc rollout status -w dc/inventory-database -n {{USER_ID}}-inventory && \
 oc rollout status -w dc/catalog-database -n {{USER_ID}}-catalog
 ----
 
-This should take about 1 minute to finish.
+1分くらいで終わるはずです。
 
 [NOTE]
 ====
-The above complex-looking command uses the `oc patch` command to programmatically edit the Kubernetes objects. You could just as easily have edited the file in an editor, but YAML can sometimes be tricky so we made it easy for you!
+上の複雑そうなコマンドでは `oc patch` コマンドを使って Kubernetes オブジェクトをプログラマティックに編集しています。エディタで編集しても簡単だとは思いますが、YAMLは時々厄介なので、シンプルに実行できるようにしました!
 ====
 
-Next, let's add sidecars to our services and wait for them to be re-deployed:
+次に、サービスにサイドカーを追加して、再デプロイされるのを待ちましょう:
 
 [source,sh,role="copypaste"]
 ----
@@ -118,6 +117,7 @@ oc rollout status -w dc/catalog-springboot -n {{USER_ID}}-catalog
 ----
 
 This should also take about 1 minute to finish. When it's done, verify that the `inventory-database` is running with 2 pods (`2/2` in the `READY` column) with this command:
+これも1分程度で終了するはずです。終了したら、 `inventory-database` が2つのポッド( `READY` 列の `2/2` )で実行されていることを以下のコマンドで確認してください:
 
 [source,sh,role="copypaste"]
 ----
@@ -125,6 +125,7 @@ oc get pods -n {{USER_ID}}-inventory --field-selector="status.phase=Running"
 ----
 
 It should show:
+次のように表示されるはずです:
 
 [source,console,role="copypaste"]
 ----
@@ -134,6 +135,7 @@ inventory-database-2-4rzlh   2/2     Running   0          82s
 ----
 
 Do the same for the catalog and confirm they also show the "2/2" pods running:
+catalogサービスに対しても同様にして、「2/2」ポッドが動作していることを確認してください:
 
 [source,sh,role="copypaste"]
 ----
@@ -149,10 +151,10 @@ catalog-springboot-2-x7cf6   2/2     Running   0          39m
 
 [WARNING]
 ====
-It may take a minute or two before the `inventory` and `catalog` services are recognized and brought into the mesh.
+`inventory` と `catalog` サービスが認識されてメッシュに取り込まれるまでには、1～2分かかるかもしれません。
 ====
 
-Next, let's create a virtual service to send incoming traffic to the catalog. Open the empty `catalog-default.yaml` file in _catalog/rules_ directory to copy the following _VirtualService_ into the empty file using CodeReady Workspaces:
+次に、catalogに着信トラフィックを送信する仮想サービスを作成してみましょう。 _catalog/rules_ ディレクトリ内の空の `catalog-default.yaml` ファイルを開き、CodeReady Workspacesを使用して以下の _VirtualService_ を空のファイルにコピーします:
 
 [source,yaml, role="copypaste"]
 ----
@@ -180,61 +182,62 @@ spec:
               number: 8080
 ----
 
-Execute the following command in CodeReady Workspaces Terminal:
+CodeReady Workspaces Terminalで以下のコマンドを実行します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/catalog/rules/catalog-default.yaml -n {{ USER_ID }}-catalog
 ----
 
-Access the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Catalog Service Page^] and ensure it should look something like:
+http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[カタログサービスページ^] にアクセスし、以下のようになっていることを確認してください:
 
 image::catalog-ui-gateway.png[catalog, 700]
 
 [NOTE]
 ====
-It takes a few seconds to reconcile _istio ingress_ with the _gateway_ and _virtual service_. Leave this page open as the _Catalog UI browser_ creates traffic (every 2 seconds) between services, which is useful for testing.
+_istio ingress_ と _gateway_ と _virtual service_ を反映するのに数秒かかります。このページを開いたままにしておくと、 _Catalog UI browser_ がサービス間のトラフィックを（2秒ごとに）作成してくれるので、テストに便利です。
 ====
 
-Ensure if we injected _side car_ to each pods. Access the https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] and verify that *{{ USER_ID }}-inventory*, *{{ USER_ID }}-catalog* are selected _Namespaces_ then enable *Traffic Animation* in the _Display_ drop-down to see animated traffic flow from _Catalog service_ to _Inventory service_:
+各ポッドに _side car_ がインジェクトできたかどうかを確認します。 https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/? edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] にアクセスし、 *{{ USER_ID }}-inventory* および *{{ USER_ID }}-catalog* が選択された _Namespaces_ になっていることを確認します。その後、 _Display_ ドロップダウンで *Traffic Animation* を有効にすると、 _Catalog service_ から _Inventory service_ へのトラフィックの流れがアニメーションで表示されます:
 
 image::kiali_graph_sidecar.png[istio, 700]
 
-You can see the incoming traffic to the catalog service along with traffic going to both the catalog and inventory databases along each branch. This mirrors what we would expect - when you access the catalog frontend, a call is made to the catalog backend, which in turn access the inventory and combines it with catalog data and returns the result for display.
+各ブランチに沿って、catalogとinventoryの両方のデータベースへのトラフィックとともに、catalogサービスへの着信トラフィックを見ることができます。これは私たちが期待するものと一致しています - catalogフロントエンドにアクセスすると、catalogバックエンドへの呼び出しが行われ、catalogバックエンドはinventoryにアクセスしてcatalogデータと結合し、表示用の結果を返します。
 
 [NOTE]
 ====
-You may occasionally see _unknown_ or _PassthroughCluster_ elements in the graph. These are due to the istio configuration changes we are doing in realtime and would disappear if you wait long enough, but you can ignore them for this lab.
+時折、 _unknown_ や _PassthroughCluster_ 要素がグラフに表示されることがあります。これらはリアルタイムで行っている istio の設定変更によるもので、十分に待てば消えてしまいますが、このラボでは無視しても構いません。
 ====
 
-=== 2. Fault Injection
+=== 2. フォルトインジェクション (Fault Injection)
 
-This step will walk you through how to use *Fault Injection* to test the end-to-end failure recovery capability of the application as a whole. An incorrect configuration of the failure recovery policies could result in unavailability of critical services. Examples of incorrect configurations include incompatible or restrictive timeouts across service calls.
+このステップでは、 *Fault Injection* を使用して、アプリケーション全体のエンドツーエンドの障害回復能力をテストする方法を説明します。障害回復ポリシーの構成が不適切な場合、重要なサービスが利用できなくなる可能性があります。不適切な構成の例としては、サービスコール間で互換性のないタイムアウトや制限されたタイムアウトがあります。
 
-_Istio_ provides a set of failure recovery features that can be taken advantage of by the services in an application. Features include:
+_Istio_ は、アプリケーション内のサービスで利用できる障害復旧機能のセットを提供しています。機能には以下のようなものがあります:
 
-* **Timeouts** to minimize wait times for slow services
-* **Bounded retries** with timeout budgets and variable jitter between retries
-* **Limits** on number of concurrent connections and requests to upstream services
-* **Active (periodic) health checks** on each member of the load balancing pool
-* **Fine-grained circuit breakers** (passive health checks) – applied per instance in the load balancing pool
+* **Timeouts**: 遅いサービスの待ち時間を最小限に抑えるためのタイムアウト
+* **Bounded retries**: タイムアウトバジェットとリトライ間のジッターを可変にした制限付きリトライ
+* **Limits** : アップストリームサービスへの同時接続数とリクエスト数の制限
+* **Active (periodic) health checks**: ロードバランシングプールの各メンバーのアクティブな（定期的な）ヘルスチェック
+* **Fine-grained circuit breakers**: 細粒度のサーキットブレーカー(パッシブヘルスチェック) - ロードバランシングプールのインスタンスごとに適用
 
-These features can be dynamically configured at runtime through Istio’s traffic management rules.
+これらの機能は、実行時にIstioのトラフィック管理ルールを介して動的に設定することができます。
 
-A combination of active and passive health checks minimizes the chances of accessing an unhealthy service. When combined with platform-level health checks (such as readiness/liveness probes in OpenShift), applications can ensure that unhealthy pods/containers/VMs can be quickly weeded out of the service mesh, minimizing the request failures and impact on latency.
+アクティブとパッシブのヘルスチェックを組み合わせることで、不健全なサービスにアクセスする機会を最小限に抑えることができます。プラットフォームレベルのヘルスチェック（OpenShiftでの rediness/liveness プローブなど）と組み合わせることで、アプリケーションは、不健全なポッド/コンテナ/VMをサービスメッシュから迅速に取り除くことができ、リクエストの失敗やレイテンシへの影響を最小限に抑えることができます。
 
-Together, these features enable the service mesh to tolerate failing nodes and prevent localized failures from cascading instability to other nodes.
+これらの機能を組み合わせることで、サービスメッシュは障害のあるノードを許容し、局部的な障害が他のノードに不安定性を連鎖させるのを防ぐことができます。
 
-Istio enables protocol-specific _fault injection_ into the network (instead of killing pods) by delaying or corrupting packets at TCP layer.
+Istioは、TCP層でパケットを遅延させたり破損させたりすることで、（ポッドを殺すのではなく）ネットワークへのプロトコル固有の _fault injection_ を可能にします。
 
-Two types of faults can be injected:
+2種類のフォルトを注入することができます:
 
-* _Delays_ are timing failures. They mimic increased network latency or an overloaded upstream service.
-* _Aborts_ are crash failures. They mimic failures in upstream services. Aborts usually manifest in the form of HTTP error codes or TCP connection failures.
+* _Delays_ (遅延)はタイミング障害です。ネットワーク遅延の増加やアップストリーム・サービスの過負荷を模倣します。
+* _Aborts_ (アボート)はクラッシュ障害です。アップストリーム・サービスの障害を模倣します。アボートは通常、HTTP エラーコードまたは TCP 接続の失敗の形で表現されます。
 
 To test our application microservices for resiliency, we will inject a failure in *50%* of the requests to the _inventory_ service, causing the service to appear to fail (and return `HTTP 5xx` errors) half of the time.
+アプリケーション内のマイクロサービスの耐障害性をテストするために、 _inventory_ サービスへのリクエストの *50%* にフォルトを注入し、時間内の半分でサービスが失敗したように見えるようにします (そして `HTTP 5xx` エラーを返します)。
 
-Open the empty `inventory-default.yaml` file in the _inventory/rules_ directory and copy the following into the file:
+_inventory/rules_ ディレクトリ内の空の `inventory-default.yaml` ファイルを開き、以下をファイルにコピーします:
 
 [source,yaml,role="copypaste"]
 ----
@@ -261,26 +264,27 @@ spec:
 ----
 
 Delete the gateway to direct route catalog that was setup earlier with:
+以下を実行して、以前に設定した catalog への直接ルートののゲートウェイを削除します:
 
 [source,sh,role="copypaste"]
 ----
 oc delete -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/catalog/rules/catalog-default.yaml -n {{ USER_ID }}-catalog
 ----
 
-Create the new VirtualService to direct traffic to the inventory service by running the following command via CodeReady Workspaces Terminal:
+CodeReady Workspaces Terminal経由で以下のコマンドを実行して、inventoryサービスへのトラフィックを転送するVirtualServiceを新規に作成します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-default.yaml -n {{ USER_ID }}-inventory
 ----
 
-Now, you can test if the inventory service works correctly via accessing the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[CoolStore Inventory page^]. If you still see _Coolstore Catalog_ then reload the page to see _Coolstore Inventory_ with kbd:[CTRL+F5] (or kbd:[Command+Shift+R] on Mac OS).
+さて、 http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[CoolStore Inventory page^] にアクセスして、inventoryサービスが正常に動作するかどうかをテストしてみましょう。それでも _Coolstore Catalog_ が表示される場合は、kbd:[CTRL+F5]（Mac OSの場合はkbd:[Command+Shift+R]）でページをリロードして、 _Coolstore Inventory_ を表示させてください。
 
 image::inventory-ui-gateway.png[fault-injection, 700]
 
-Let’s inject a failure (_500 status_) in *50%* of requests to _inventory_ microservices. Edit _inventory-default.yaml_ as below.
+_inventory_ マイクロサービスへのリクエストの *50%* にフォルト( _500 status_ )を注入してみましょう。以下のように _inventory-default.yaml_ を編集します。
 
-Open the empty `inventory-vs-fault.yaml` file in _inventory/rules_ directory and copy the following codes.
+_inventory/rules_ ディレクトリ内の空の `inventory-vs-fault.yaml` ファイルを開き、以下のコードをコピーしてください。
 
 [source,yaml,role="copypaste"]
 ----
@@ -306,36 +310,36 @@ spec:
               number: 8080
 ----
 
-Before creating a new *inventory-fault VirtualService*, we need to delete the existing inventory-default virtualService. Run the following command via CodeReady Workspaces Terminal:
+新規に *inventory-fault VirtualService* を作成する前に、既存の inventory-default virtualService を削除する必要があります。CodeReady Workspaces Terminal で以下のコマンドを実行します:
 
 [source,sh,role="copypaste"]
 ----
 oc delete virtualservice/inventory-default -n {{ USER_ID }}-inventory
 ----
 
-Then create a new VirtualService with this command:
+次に、このコマンドで新しい VirtualService を作成します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-vs-fault.yaml -n {{ USER_ID }}-inventory
 ----
 
-Let’s find out if the fault injection works corectly via accessing the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[CoolStore Inventory page^] once again. You will see that the *Status* of CoolStore Inventory continues to change between *DEAD* and *OK*:
+http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[CoolStore Inventoryページ^] にもう一度アクセスして、フォールトインジェクションが正常に動作しているかどうかを確認してみましょう。CoolStore Inventoryの *Status* (状態)が *DEAD* と *OK* の間で変化し続けていることがわかります。
 
 image::inventory-dead-ok.png[fault-injection, 700]
 
-Back on the https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] and you will see `red` traffic from _istio-ingressgateway_ as well as around 50% of requests are displayed as _5xx_ on the right side, _HTTP Traffic_. It may not be _exactly_ 50% since some traffic is coming from the catalog and ingress gateway at the same time, but it will approach 50% over time.
+https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/? edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] を見ると、 _istio-ingressgateway_ からの `red` のトラフィックと、リクエストの約50%が _HTTP Traffic_ の右側に _5xx_ と表示されています。catalogとingress gatewayから同時に来るトラフィックがあるので、 _正確に_ 50%ではないかもしれませんが、時間の経過とともに50%に近づくでしょう。
 
 [WARNING]
 ====
-Kiali "looks back" and records/displays the last minute of traffic, so if you're quick you may see some of the prior traffic flows from earlier in the lab. Within 1 minute the graph should clear up and only show what you are looking for!
+Kialiは "ルックバック" を行い、最後の1分間のトラフィックを記録/表示します。1分以内にグラフはクリアになり、あなたが探しているものだけが表示されます!
 ====
 
 image::inventlry-vs-error-kiali.png[fault-injection,700]
 
-Let’s now add a 5 second delay for the `inventory` service.
+それでは、`inventory` サービスに5秒の遅延を加えてみましょう。
 
-Open the empty `inventory-vs-fault-delay.yaml` file in _inventory/rules_ directory and copy the following code into it:
+_inventory/rules_ ディレクトリ内の空の `inventory-vs-fault-delay.yaml` ファイルを開き、以下のコードをコピーしてください:
 
 [source,yaml,role="copypaste"]
 ----
@@ -361,40 +365,41 @@ spec:
               number: 8080
 ----
 
-Delete the existing inventory-fault VirtualService in CodeReady Workspaces Terminal:
+CodeReady Workspaces Terminal で既存のインベントリの fault VirtualService を削除します:
 
 [source,sh,role="copypaste"]
 ----
 oc delete virtualservice/inventory-fault -n {{ USER_ID }}-inventory
 ----
 
-Then create a new virtualservice:
+次に、新しい virtualservice を作成します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-vs-fault-delay.yaml -n {{ USER_ID }}-inventory
 ----
 
-Go to the *Kiali Graph* you opened earlier and you will see that the `green` traffic from _istio-ingressgateway_ is delayed for requests coming from inventory service. Note that you need to check *Traffic Animation* in the _Display_ select box.
+先ほど開いた *Kiali Graph* に行くと、 _istio-ingressgateway_ からの `green` のトラフィックがinventoryサービスからのリクエストに対して遅延していることがわかります。この場合、 _Display_ の選択ボックスで *Traffic Animation* にチェックを入れる必要があることに注意してください。
 
 [NOTE]
 ====
-You may still see "red" traffic from our previous fault injections, but those will disappear after the 1 minute time window (the default lookback period) of the graph elapses.
+以前のフォルトインジェクションによる "red" トラフィックがまだ表示されているかもしれませんが、グラフの1分間のタイムウィンドウ（デフォルトのルックバック期間）が経過すると消えてしまいます。
 ====
 
 image::inventlry-vs-delay-kiali.png[fault-injection,700]
 
-Click on the "edge" (the line between `istio-ingressgateway` and `inventory`) and then scroll to the bottom of the right-side graph showing the _HTTP Request Response Time_. Hover over the black _average_ data point to confirm that the average response time is about 5000ms (5 seconds) as expected:
+「エッジ」( `istio-ingressgateway` と `inventory` の間の線) をクリックし、右側の _HTTP Request Response Time_ グラフの一番下までスクロールしてください。黒い _average_ データポイントにカーソルを合わせて、平均応答時間が予想通り約5000ms(5秒)であることを確認してください:
 
 image::5sdelay.png[delay, 800]
 
-If the Inventory’s front page was set to correctly handle delays, we expect it to load within approximately 5 seconds. To see the web page response times, open the Developer Tools menu in IE, Chrome or Firefox (typically, key combination kbd:[CTRL+SHIFT+I] or kbd:[CMD+ALT+I] on a Mac), select the `Network` tab, and reload the inventory web page.
+Inventoryのフロントページが遅延を正しく処理できるならば、約5秒以内に読み込まれることが予想されます。ウェブページの応答時間を確認するには、IE、Chrome、FirefoxのDeveloper Toolsメニューを開き（典型的には kbd:[CTRL+SHIFT+I] 、Macの場合は kbd:[CMD+ALT+I] ）、 `Network` タブを選択し、inventoryのウェブページをリロードしてください。
 
 You will see and feel that the webpage loads in about 5 seconds:
+約5秒でウェブページが読み込まれるのを確認、体感してください:
 
 image::inventory-webui-delay.png[Delay, 700]
 
-Before we will move to the next step, clean up the fault injection and set the default virtual service once again using these commands in a Terminal:
+次のステップに移る前に、ターミナルでこれらのコマンドを使用して、フォールトインジェクションをクリーンアップし、デフォルトの仮想サービスをもう一度設定します:
 
 [source,sh,role="copypaste"]
 ----
@@ -402,35 +407,34 @@ oc delete virtualservice/inventory-fault-delay -n {{ USER_ID }}-inventory && \
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-default.yaml -n {{ USER_ID }}-inventory
 ----
 
-Also, close the tabs in your browser for the Inventory and Catalog services to avoid unnecessary load, and stop the endless `for` loop you started in the beginning of this lab in CodeReady by closing the Terminal window that was running it.
+また、不要な負荷を避けるために、ブラウザのInventoryとCatalogサービスのタブを閉じ、CodeReadyのターミナルウィンドウを閉じてこのラボの最初に実行した無限の`for`ループを止めてください。
 
-=== 3. Enable Circuit Breaker
+=== 3. サーキットブレーカーの有効化
 
-In this step, you will configure a circuit Breaker to protect the calls to `Inventory` service. If the `Inventory` service gets overloaded due to call volume, Istio will limit future calls to the service instances to allow them to recover.
+このステップでは、 `Inventory` サービスへの呼び出しを保護するためにサーキットブレーカーを構成します。呼び出し回数が多いために `Inventory` サービスが過負荷になった場合、Istio はサービスインスタンスへの今後の呼び出しを制限して、サービスインスタンスが回復できるようにします。
 
-Circuit breaking is a critical component of distributed systems. It’s nearly always better to fail quickly and apply back pressure upstream as soon as possible. Istio enforces circuit breaking limits at the network level as opposed to having to configure and code each application independently.
+サーキットブレーカーは、分散システムの重要なコンポーネントです。アップストリームのバックプレッシャーに迅速に対応して早めに失敗させることは、だいたいにおいて良い対応手段となります。Istioは、各アプリケーションを個別に設定してコード化する方法とは対照的に、ネットワークレベルでサーキットブレーカーの制限を強制します。
 
-Istio supports various types of conditions that would trigger a circuit break:
+Istioは、サーキットブレイクのトリガーとなる様々なタイプの条件に対応しています:
 
-* *Cluster maximum connections*: The maximum number of connections that Istio will establish to all hosts in a cluster.
+* *Cluster maximum connections*: クラスタ最大接続数、Istioがクラスタ内のすべてのホストに確立する最大接続数
 
-* *Cluster maximum pending requests*: The maximum number of requests that will be queued while waiting for a ready connection pool connection.
+* *Cluster maximum pending requests*: クラスタの最大保留要求数、接続プール接続の準備ができている間にキューに入れられるリクエストの最大数
 
-* *Cluster maximum requests*: The maximum number of requests that can be outstanding to all hosts in a cluster at any given time. In practice this is applicable to HTTP/2 clusters since HTTP/1.1 clusters are governed by the maximum connections circuit breaker.
+* *Cluster maximum requests*: クラスタ最大リクエスト数、クラスタ内のすべてのホストに対して、ある時点で未処理のリクエストの最大数。実際には、HTTP/1.1 クラスタは最大接続数サーキットブレーカーによって管理されているため、これは HTTP/2 クラスタに適用されます。
 
-* *Cluster maximum active retries*: The maximum number of retries that
-can be outstanding to all hosts in a cluster at any given time. In general Istio recommends aggressively circuit breaking retries so that retries for sporadic failures are allowed but the overall retry volume cannot explode and cause large scale cascading failure.
+* *Cluster maximum active retries*: クラスタの最大アクティブリトライ数、クラスタ内のすべてのホストに対して、任意の時点で最大のリトライ数を指定します。一般的には、散発的な障害に対するリトライは許可されていても、全体のリトライ量が爆発して大規模なカスケード障害を引き起こすことがないように、積極的にサーキットブレイキングリトライを行うことをお勧めします。
 
 [NOTE]
 ====
-that *HTTP2* uses a single connection and never queues (always multiplexes), so max connections and max pending requests are not applicable.
+*HTTP2* は単一の接続を使用し、キューイングを行わない (常にマルチプレックス) ので、最大接続数と最大保留中のリクエスト数は適用されません。
 ====
 
-Each circuit breaking limit is configurable and tracked on a per upstream cluster and per priority basis. This allows different components of the distributed system to be tuned independently and have different limits. See the https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking[Envoy’s circuit breaker^] for more details.
+各サーキットブレーキングの制限は、上流クラスタごと、優先度ごとに設定可能であり、追跡されます。これにより、分散システムの異なるコンポーネントを独立してチューニングし、異なる制限を持つことができます。詳細は https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking[Envoyのサーキットブレーカー^] を参照してください。
 
-Let’s add a circuit breaker to the calls to the *Inventory service*. Instead of using a _VirtualService_ object, circuit breakers in Istio are defined as _DestinationRule_ objects. DestinationRule defines policies that apply to traffic intended for a service after routing has occurred. These rules specify configuration for load balancing, connection pool size from the sidecar, and outlier detection settings to detect and evict unhealthy hosts from the load balancing pool.
+ここでは、 *Inventoryサービス* への呼び出しにサーキットブレーカーを追加してみましょう。 _VirtualService_ オブジェクトを使用する代わりに、Istioのサーキットブレーカーは _DestinationRule_ オブジェクトとして定義されています。DestinationRule は、ルーティングが発生した後に、サービスの対象となるトラフィックに適用されるポリシーを定義します。これらのルールは、負荷分散の設定、サイドカーからの接続プールサイズ、負荷分散プールから不健全なホストを検出して退避させるための外れ値検出の設定を指定します。
 
-Open the empty *inventory-cb.yaml* file in _inventory/rules_ directory and add this code to the file to enable circuit breaking when calling the Inventory service:
+_inventory/rules_ ディレクトリ内の空の *inventory-cb.yaml* ファイルを開き、Inventoryサービスの呼び出し時にサーキットブレイキングを有効にするためにこのコードを追加します:
 
 [source,yaml,role="copypaste"]
 ----
@@ -449,47 +453,46 @@ spec:
         maxRequestsPerConnection: 1
 ----
 
-Run the following command via CodeReady Workspaces Terminal to then create the rule:
+CodeReady Workspacesターミナルから以下のコマンドを実行して、ルールを作成します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-cb.yaml -n {{ USER_ID }}-inventory
 ----
 
-We set the Inventory service’s maximum connections to 1 and maximum pending requests to 1. Thus, if we send more than 2 requests within a short period of time to the inventory service, 1 will go through, 1 will be pending, and any additional requests will be denied until the pending request is processed. Furthermore, it will detect any hosts that return a server error (HTTP 5xx) and eject the pod out of the load balancing pool for 15 minutes. You can visit here to check the https://istio.io/docs/tasks/traffic-management/circuit-breaking[Istio spec^] for more details on what each configuration
-parameter does.
+Inventoryサービスの最大接続数を 1 に、最大保留中のリクエストを 1 に設定しました。 したがって、短期間に 2 つ以上のリクエストをinventoryサービスに送信すると、1 つは許可され、1 つは保留され、保留中のリクエストが処理されるまで追加のリクエストは拒否されます。さらに、サーバーエラー（HTTP 5xx）を返すホストを検出し、15分間、負荷分散プールからポッドをイジェクトします。それぞれの設定パラメータがどのようなものかは、https://istio.io/docs/tasks/traffic-management/circuit-breaking[Istio spec^] を参照してください。
 
-=== 4. Overload the service
+=== 4. サービスの過負荷
 
-We'll use a utility called _siege_ to send multiple concurrent requests to our application, and witness the circuit breaker kicking in and opening the circuit.
+我々は _siege_ というユーティリティを使って、アプリケーションに複数の同時リクエストを送信し、サーキットブレーカーがキックインして開通するのを目撃しましょう。
 
-Execute this to simulate a number of users attempting to access the gateway URL simultaneously in CodeReady Workspaces Terminal.
+これを実行して、CodeReady Workspaces Terminal でゲートウェイ URL に同時にアクセスしようとする多数のユーザーをシミュレートします。
 
 [source,sh,role="copypaste"]
 ----
 siege --verbose --time=1M --concurrent=10 'http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}'
 ----
 
-This will run for 1 minute, and you'll likely errors like `[error] Failed to make an SSL connection: 5` which indicates that the circuit breaker is tripping and stopping the flood of requests from going to the service.
+これは1分間実行され、 `[error] Failed to make an SSL connection. 5` のようなエラーが出ることがありますが、これはサーキットブレーカーがトリップしてリクエストの洪水がサービスに届くのを止めていることを示しています。
 
-To see this, open the https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/d/LJ_uJAvmk/istio-service-dashboard?orgId=1&refresh=10s&var-service=inventory.{{ USER_ID }}-inventory.svc.cluster.local&var-srcns=All&var-srcwl=All&var-dstns=All&var-dstwl=All[Istio Service Dashboard^] in Grafana and ensure to see _Client Success Rate(non-5xx responses)_ of inventory service is no longer at 100%:
+これを確認するには、 https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/d/LJ_uJAvmk/istio-service-dashboard?orgId=1&refresh=10s&var-service=inventory.{{ USER_ID }}-inventory.svc.cluster.local&var-srcns=All&var-srcwl=All&var-dstns=All&var-dstwl=All[Istio Service Dashboard^] でGrafanaを開き、Inventoryサービスの _Client Success Rate(non-5xx responses)_ がもはや100%になっていないことを確認します:
 
 [NOTE]
 ====
-It may take 10-20 seconds before the evidence of the circuit breaker is visible within the Grafana dashboard, due to the not-quite-realtime nature of Prometheus metrics and Grafana refresh periods and general network latency. You can also re-run the `siege` command to force more failures.
+Prometheusメトリクスの特性(准リアルタイム性)やGrafanaのリフレッシュ期間、一般的なネットワーク遅延のため、サーキットブレーカーの痕跡がGrafanaダッシュボードに表示されるまでに10～20秒かかることがあります。また、 `siege` コマンドを再実行して、より多くの障害を強制的に発生させることもできます。
 ====
 
 image::inventory-circuit-breaker-grafana.png[circuit-breaker, 700]
 
-That’s the circuit breaker in action, limiting the number of requests to the service. In practice your limits would be much higher.
+これがサービスへのリクエスト数を制限するサーキットブレーカーの動きです。実際には(リクエスト数の制限値は)もっと高くなるでしょう
 
-You can also see the Circuit Breaker triggering `HTTP 503` errors in the animation:
+また、アニメーションの中でサーキットブレーカーが `HTTP 503` エラーを発生させているのを見ることができます:
 
 image::inventory-circuit-breaker-kiali.png[circuit-breaker, 700]
 
-In practice, these `503`s would trigger upstream fallbacks while the overloaded service is given a chance to recover.
+実際には、これらの `503` は、アップストリームのフォールバックを引き起こしつつ、過負荷のサービスに回復する機会を与えていることを意味します。
 
-Before we move on the next step, clear existing destinationrule, virtural service and gateway via the following commands.
+次のステップに進む前に、以下のコマンドで既存のdestinationrule、virtural service、gatewayをクリアします。
 
 [source,sh,role="copypaste"]
 ----
@@ -498,44 +501,47 @@ oc delete virtualservice/inventory-default -n {{ USER_ID }}-inventory && \
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/catalog/rules/catalog-default.yaml -n {{ USER_ID }}-catalog
 ----
 
-=== 6. Enable Authentication using Single Sign-on
+=== 6. シングルサインオンによる認証の有効化
 
 In this step, you will learn how to enable authentication. You will secure the _Catalog_ endpoint. We will use JWT with Red Hat Single Sign On which is part of the Red Hat Runtimes.
+このステップでは、認証を有効にする方法を学習します。 _Catalog_ エンドポイントをセキュアにします。Red Hat Runtimesの一部であるRed Hat Single Sign Onを利用してJWTを適用します。
 
-References:
+参考情報:
 
 * https://en.wikipedia.org/wiki/JSON_Web_Token[JSON Web Token(JWT)^]
 * https://access.redhat.com/products/red-hat-single-sign-on[Red Hat Single Sign-On^]
 * https://www.redhat.com/en/products/application-runtimes[Red Hat Runtimes^]
 
-Let’s deploy *Red Hat Single Sign-On (RH-SSO)* that enables service authentication for traffic in the service mesh.
+サービスメッシュ内のトラフィックのサービス認証を可能にする *Red Hat Single Sign-On (RH-SSO)* を導入してみましょう。
 
 _Red Hat Single Sign-On (RH-SSO)_ is based on the *Keycloak* project and enables you to secure your web applications by providing Web single sign-on (SSO) capabilities based on popular standards such as *SAML 2.0, OpenID Connect and OAuth 2.0*. The RH-SSO server can act as a SAML or OpenID Connect-based Identity Provider, mediating with your enterprise user directory or 3rd-party SSO provider for identity information and your applications via standards-based tokens. The major features include:
+Red Hat Single Sign-On (RH-SSO)_は、 *Keycloak* プロジェクトをベースにしており、 *SAML 2.0、OpenID Connect、OAuth 2.0* などの一般的な標準に基づいたWebシングルサインオン(SSO)機能を提供することで、Webアプリケーションのセキュリティを確保することができます。RH-SSOサーバは、SAMLまたはOpenID ConnectベースのIdentity Providerとして機能し、標準ベースのトークンを介して、アイデンティティ情報やアプリケーションと企業のユーザーディレクトリまたはサードパーティのSSOプロバイダを仲介することができます。主な機能は以下の通りです:
 
-* *Authentication Server* - Acts as a standalone SAML or OpenID Connect-based Identity Provider.
-* *User Federation* - Certified with LDAP servers and Microsoft Active Directory as sources for user information.
-* *Identity Brokering* - Integrates with 3rd-party Identity Providers including leading social networks as identity source.
-* *REST APIs and Administration GUI* - Specify user federation, role mapping, and client applications with easy-to-use Administration GUI and REST APIs.
+* *Authentication Server* (認証サーバ) - スタンドアロン SAML または OpenID Connect ベースの Identiry Provier として動作
+* *User Federation* - ユーザー情報のソースとして LDAP サーバーおよび Microsoft Active Directory を認定
+* *Identity Brokering* - ID ソースとして、主要なソーシャルネットワークを含むサードパーティの Identity Provider と統合
+* *REST APIs and Administration GUI* - 使いやすい管理GUIとREST APIを使用して、ユーザーフェデレーション、ロールマッピング、クライアントアプリケーションを指定
 
-We will deploy RH-SSO in a new project. Go to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-catalog[Topology View^], click on *Create Project*:
+新規プロジェクトでRH-SSOをデプロイします。 {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-catalog[トポロジービュー^] に移動し、 *Create Project* をクリックします:
 
 image::create_project_topology.png[rhsso, 500]
 
-Type the following name then click on *Create*:
+以下の名前を入力し、 *Create* をクリックします:
 
  * Name: `{{ USER_ID}}-rhsso`
 
 image::create_project_popup.png[rhsso, 500]
 
-Click on *From Catalog* in Topology view:
+トポロジービューの *From Catalog* をクリックします:
 
 image::create_project_fc.png[rhsso, 700]
 
 Type `ccn-sso` in search box and click on *CCN + Red Hat Single Sign-On 7.4 on OpenJDK + PostgreSQL* catalog. Then click on *Instantiate Template*:
+検索ボックスに `ccn-sso` と入力し、 *CCN + Red Hat Single Sign-On 7.4 on OpenJDK + PostgreSQL* カタログをクリックします。その後、 *Instantiate Template* をクリックします:
 
 image::catalog_rhsso.png[rhsso, 700]
 
-Type the following varialbles then leave the others as default. Click on *Create*:
+以下の文字列を入力し、他の文字列はデフォルトのままにしておきます。 *作成* をクリックします:
 
  * RH-SSO Administrator Username: `admin`
  * RH-SSO Administrator Password: `admin`
@@ -545,7 +551,7 @@ Type the following varialbles then leave the others as default. Click on *Create
 
 image::catalog_rhsso_detail.png[rhsso, 700]
 
-Add the following labels in CodeReady Workspaces Terminal:
+CodeReady Workspaces Terminalから以下のラベルを追加します:
 
 [source,sh,role="copypaste"]
 ----
@@ -557,39 +563,41 @@ oc label dc/sso app.kubernetes.io/part-of=sso --overwrite && \
 oc annotate dc/sso-postgresql app.openshift.io/connects-to=sso --overwrite
 ----
 
-Go back to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-rhsso[Topology View^]:
+{{console_url }}/topology/ns/{{user_id }}}-rhsso[トポロジービュー^] に戻ります:
 
 image::rhsso-topology.png[sso, 700]
 
-Once this finishes (it may take a minute or two), click on https://secure-sso-{{ USER_ID }}-rhsso.{{ ROUTE_SUBDOMAIN}}[Secure SSO Route^] to access RH-SSO web console as below:
+これが終わったら（1～2分かかるかもしれません）、 https://secure-sso-{{{ USER_ID }}}-rhsso.{{ ROUTE_SUBDOMAIN}}[Secure SSO Route^] をクリックして、以下のようにRH-SSOのWebコンソールにアクセスします:
 
 image::rhsso_landing_page.png[sso, 700]
 
-Click on _Administration Console_ to configure *Istio* Ream then input the usename and password that you used earlier:
+_Administration Console_ をクリックして *Istio* Reamを設定し、先ほど使用したユーザ名とパスワードを入力します:
 
 * Username or email: `admin`
 * Password: `admin`
 
 image::rhsso_admin_login.png[sso, 700]
 
-You will see general information of the _Istio Realm_. Click on *Login* tab and de-select (swich off) _Require SSL_ by setting it to _none_ then click on *Save*.
+_Istio Realm_ の一般的な情報が表示されます。 *Login* タブをクリックして、 _Require SSL_ を _none_ に設定して非選択(swich off)にしてから、 *Save* をクリックしてください。
 
 image::rhsso_istio_realm.png[sso, 700]
 
 [NOTE]
 ====
-Red Hat Single Sign-On generates a self-signed certificate the first time it runs. Please note that self-signed certificates don’t work to authenticate by Istio so we will change not to use SSL for testing Istio authentication.
+Red Hat Single Sign-On は初回起動時に自己署名証明書を生成します。自己署名付き証明書ではIstioでの認証がうまくいかないので、Istio認証のテストにSSLを使わないように変更します。
 ====
 
 Next, create a new RH-SSO _client_ that is for trusted browser apps and web services in our _Istio_ realm. Go to *Clients* in the left menu then click on *Create*.
+次に、 _Istio_ レルム内の信頼されたブラウザアプリとWebサービスのための新しいRH-SSO _client_ を作成します。左メニューの *Clients* に移動し、 *Create* をクリックします。
 
 image::rhsso_clients.png[sso, 700]
 
-Input `ccn-cli` in _Client ID_ field and click on *Save*.
+_Client ID_ フィールドに `ccn-cli` と入力し、 *Save* をクリックします。
 
 image::rhsso_clients_create.png[sso, 700]
 
 On the next screen, you will see details on the *Settings* tab, the only thing you need to do is to input _Valid Redirect URIs_ that can be used after successful login or logout for clients.
+次の画面では、 *Settings* タブの詳細が表示されます。あなたがする必要がある唯一のことは、クライアントのために成功したログインまたはログアウト後に使用することができる _Valid Redirect URI_ を入力することです。
 
 [source,sh,role="copypaste"]
 ----
@@ -598,64 +606,64 @@ http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/*
 
 image::rhsso_clients_settings.png[sso, 700]
 
-Don’t forget to click *Save*!
+*Save* をクリックするのを忘れずに!
 
-Now, let’s define a role that will be assigned to your credentials, let’s create a simple role called *ccn_auth*. Go to *Roles* in the left menu then click on _Add Role_.
+では、資格情報に割り当てられるロールを定義してみましょう。 *ccn_auth* という名前のシンプルなロールを作成します。 左メニューの *Roles* に移動し、 _Add Role_ をクリックします。
 
 image::rhsso_roles.png[sso, 700]
 
-Input `ccn_auth` in _Role Name_ field and click on *Save*.
+_Role Name_ フィールドに `ccn_auth` と入力し、*Save* をクリックします。
 
 image::rhsso_roles_create.png[sso, 700]
 
-Next let’s update the password policy for our _authuser_.
+次に、 _authuser_ のパスワードポリシーを更新してみましょう。
 
-Go to *Users* menu on the left side menu then click on *View all users*.
+左側メニューの *Users* に移動し、 *View all users* をクリックします。
 
 image::rhsso_users.png[sso, 700]
 
-If you click on the `auth{{ USER_ID }}` ID then you will find more information such as Details, Attributes, Credentials, Role Mappings, Groups, Contents, and Sessions. You don’t need to update any details in this step.
+`auth{{ USER_ID }}` IDをクリックすると、詳細、属性、資格情報、ロールマッピング、グループ、コンテンツ、セッションなどの情報が表示されます。このステップでは詳細を更新する必要はありません。
 
 image::rhsso_istio_users_details.png[sso, 700]
 
-Go to *Credentials* tab and input the following variables:
+*Credentials* タブに移動し、以下の変数を入力します:
 
 * New Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 * Password Confirmation: `{{ OPENSHIFT_USER_PASSWORD }}`
 * Temporary: `OFF`
 
-Make sure to turn off the *Temporary* flag unless you want the auth{{ USER_ID }} to have to change his password the first time they authenticate.
+auth{{ USER_ID }} に最初の認証時にパスワードを変更させたくない場合は、必ず *Temporary* フラグをオフにしてください。
 
-Click on *Reset Password*.
+*Reset Password* をクリックします。
 
 image::rhsso_users_credentials.png[sso, 700]
 
-Then click on *Change password* in the popup window.
+次に、ポップアップウィンドウで *Change password* をクリックします。
 
 image::rhsso_users_change_pwd.png[sso, 700]
 
-Now proceed to the *Role Mappings* tab and assign the role *ccn_auth* via clicking on _Add selected >_.
+*Role Mappings* タブに進み、 _Add selected >_ をクリックして *ccn_auth* ロールを割り当てます。
 
 image::rhsso_rolemapping.png[sso, 700]
 
-You will confirm the ccn_auth role in _Assigned Roles_ box.
+_Assigned Roles_ ボックスでccn_authロールを確認します。
 
 image::rhsso_rolemapping_assigned.png[sso, 700]
 
-Well done, you have enabled RH-SSO to with a custom realm, user and role!
+よくできました、あなたはカスタムレルム、ユーザー、およびロールでRH-SSOを有効にしました!
 
-==== Rename services
+==== サービス名の変更
 
-In upcoming versions of OpenShift Service Mesh, newer versions of Istio will https://istio.io/docs/ops/configuration/traffic-management/protocol-selection/#automatic-protocol-selection[auto-detect protocols^] like `http`. But for now, we must explicitly include the protocol name in our Kubernetes service names so that we can do advanced things like apply authentication and authorization policies. To do that, run the following commands to update the service names for both catalog and inventory:
+OpenShift Service Meshの今後のバージョンでは、Istioの新しいバージョンでは、 `http` のように https://istio.io/docs/ops/configuration/traffic-management/protocol-selection/#automatic-protocol-selection[プロトコルの自動検出^] ができるようになります。しかし今のところは、認証や認可ポリシーの適用などの高度なことができるようにするためには、Kubernetesのサービス名にプロトコル名を明示的に含める必要があります。そのためには、以下のコマンドを実行して、catalogとinventoryの両方のサービス名を更新します:
 
 [source,sh,role="copypaste"]
 ----
 oc patch -n {{ USER_ID }}-catalog svc/catalog-springboot -p '{"spec": {"ports":[{"port": 8080, "name": "http"}, {"port": 8443, "name": "https"}]}}'
 ----
 
-Turning to back to Istio, let’s create a user-facing authentication policy using JSON Web Tokens (JWTs) and the https://openid.net/connect/[OIDC^] authenticaiton flow.
+Istioに話を戻して、JSON Web Tokens (JWT)と https://openid.net/connect/[OIDC^] 認証フローを使って、ユーザインタフェースの認証ポリシーを作成してみましょう。
 
-In CodeReady, open the empty *ccn-auth-config.yml* file in _catalog/rules_ directory to copy the following policy.
+CodeReadyで、 _catalog/rules_ ディレクトリ内の空の *ccn-auth-config.yml* ファイルを開き、以下のポリシーをコピーします。
 
 [source,yaml,role="copypaste"]
 ----
@@ -675,33 +683,34 @@ spec:
 ----
 
 The following fields are used above to create a Policy in Istio and are described here:
+Istioでポリシーを作成する際には、上記のように以下のフィールドを使用します。説明は以下の通りです:
 
-* *issuer* - Identifies the issuer that issued the JWT. See https://tools.ietf.org/html/rfc7519#section-4.1.1[issuer^] usually a URL or an email address.
-* *jwksUri* - URL of the provider’s public key set to validate signature of the JWT.
-* *audiences* - The list of JWT https://tools.ietf.org/html/rfc7519#section-4.1.3[audiences^] that are allowed to access. A JWT containing any of these audiences will
-be accepted.
+*issuer* - JWTを発行した発行者を識別します。 https://tools.ietf.org/html/rfc7519#section-4.1.1[issuer^] を参照のこと。通常はURLまたは電子メール・アドレス。
+* *jwksUri* - JWTの署名を検証するために設定されたプロバイダの公開鍵のURL。
+* *audiences* - アクセスが許可されているJWT https://tools.ietf.org/html/rfc7519#section-4.1.3[audiences^] のリスト。これらのオーディエンスのいずれかを含むJWTが受け入れられます。
 
-Then execute the following oc command in CodeReady Workspaces Terminal to create this object:
+次に、CodeReady Workspaces Terminalで以下のocコマンドを実行して、このオブジェクトを作成します:
 
 [source,sh,role="copypaste"]
 ----
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/catalog/rules/ccn-auth-config.yaml -n {{ USER_ID }}-catalog
 ----
 
-Now you can’t access the catalog service without authentication of RH-SSO. You confirm it using the following curl command in CodeReady Workspaces Terminal:
+これでRH-SSOで認証されないとcatalogサービスにアクセスできなくなりました。CodeReady Workspaces Terminalで以下のcurlコマンドで確認します:
 
 [source,sh,role="copypaste"]
 ----
 curl -i http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}
 ----
 
-You should get and `HTTP 401 Unauthorized` and `Origin authentication failed.` messages.
+`HTTP 401 Unauthorized` と `Origin authentication failed.` のメッセージが表示されるはずです。
 
 The expected response is here because the user has not been identified with a valid JWT token in RH-SSO. It normally takes `5 ~ 10 seconds` to initialize the authentication policy in Istio Mixer. After this things go quickly as policies are cached for some period of time.
+このレスポンスは期待どおりです。なぜなら、RH-SSOで有効なJWTトークンでユーザが識別されていないためです。Istio Mixerの認証ポリシーの初期化には、通常、`5～10秒`かかります。この後、しばらくの間はポリシーがキャッシュされるので、認証ポリシーの適用は高速に行われます。
 
 image::rhsso_call_catalog_noauth.png[sso, 900]
 
-In order to generate a correct token, run next `curl` request in CodeReady Workspaces Terminal. This command will store the output Authorization token from RH-SSO in an environment variable called *TOKEN*.
+正しいトークンを生成するには、CodeReady Workspaces Terminalで次の `curl` リクエストを実行します。このコマンドは、RH-SSOから出力されたAuthorizationトークンを *TOKEN* という環境変数に格納します。
 
 [source,sh,role="copypaste"]
 ----
@@ -713,14 +722,14 @@ export TOKEN=$( curl -X POST 'http://sso-{{ USER_ID }}-rhsso.{{ ROUTE_SUBDOMAIN 
  -d 'client_id=ccn-cli' | jq -r '.access_token')  && echo $TOKEN;
 ----
 
-Once you have generated the token, re-run the curl command below with the token in CodeReady Workspaces Terminal:
+トークンを生成したら、CodeReady Workspaces Terminalでトークンを指定して以下のcurlコマンドを再実行します:
 
 [source,sh,role="copypaste"]
 ----
 curl -H "Authorization: Bearer $TOKEN" http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/services/products | jq
 ----
 
-You should see the following expected output:
+以下のような期待される出力が表示されるはずです:
 
 [source,json]
 ----
@@ -735,20 +744,20 @@ You should see the following expected output:
 ]
 ----
 
-Congratulations! You’ve integrated RH-SSO with Istio to protect service mesh traffic to the catalog service, without having to change the application at all. Istio can use Keycloak to authenticate service-to-service calls (also called "east-west" traffic).
+おめでとうございます。IstioとRH-SSOを統合して、アプリケーションを全く変更することなく、カタログサービスへのサービス・メッシュ・トラフィックを保護することができました。Istioは、Keycloakを使用して、サービス間の通話（「east-west」トラフィックとも呼ばれる）を認証することができます。
 
-For "north-south" traffic, such as traffic coming in from a frontend web application, RH-SSO provides https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/securing_applications_and_services_guide/openid_connect_3[various adapters^] for apps like Spring Boot, JBoss EAP and others to configure your apps to authenticate against RH-SSO. Quarkus also provides MicroProfile JWT and Keycloak adapters for those types of apps. See the https://quarkus.io/guides[Quarkus Guides^] for more detail.
+フロントエンドのウェブアプリケーションからのトラフィックなどの「north-south」トラフィックについては、RH-SSOは、Spring BootやJBoss EAPなどのアプリ用にhttps://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/securing_applications_and_services_guide/openid_connect_3[各種アダプタ^] を提供しており、アプリがRH-SSOに対して認証を行うように設定できます。また、Quarkusは、これらのタイプのアプリ用のMicroProfile JWTとKeycloakアダプタも提供しています。詳細は、https://quarkus.io/guides[Quarkus Guides^] を参照してください。
 
-*Red Hat* also offers https://access.redhat.com/products/quarkus[Red Hat build of Quarkus(RHBQ)^] to support and maintenance over stated time periods for the major versions of Quarkus. In this workhop, we use RHBQ to develop cloud-native microservices. https://access.redhat.com/documentation/en-us/red_hat_build_of_quarkus[Learn more about RHBQ^]. This is one of the cloud-native runtimes included in https://www.redhat.com/en/products/runtimes[Red Hat Runtimes^].
+また、*Red Hat* は https://access.redhat.com/products/quarkus[Red Hat build of Quarkus(RHBQ)^] を利用して、Quarkusの主要なバージョンのサポートやメンテナンスを定められた期間にわたって提供しています。今回のワークショップでは、RHBQを使ってクラウドネイティブのマイクロサービスを開発します。 https://access.redhat.com/documentation/en-us/red_hat_build_of_quarkus[RHBQについて詳しくはこちら^] 。 https://www.redhat.com/en/products/runtimes[Red Hat Runtimes^] に含まれるクラウドネイティブランタイムの一つです。
 
-When combining Red Hat SSO with istio, you can ensure traffic within the service mesh and traffic coming and leaving the mesh can be properly authenticated.
+Red Hat SSO と istio を組み合わせると、サービスメッシュ内のトラフィックとメッシュを出入りするトラフィックを適切に認証できるようになります。
 
-=== Summary
+=== まとめ
 
-In this scenario you used Istio to implement many of the features needed in modern, distributed applications.
+このシナリオでは、最新の分散型アプリケーションに必要な機能の多くを実装するために Istio を使用しました。
 
-Istio provides an easy way to create a network of deployed services with load balancing, service-to-service authentication, monitoring, and more without requiring any changes in service code. You add Istio support to services by deploying a special sidecar proxy throughout your environment that intercepts all network communication between microservices, configured and managed using Istio’s control plane functionality.
+Istioは、サービスコードの変更を必要とせずに、デプロイされたサービス間のネットワークにロードバランシング、サービス間認証、監視などを簡単に備える方法を提供します。Istioのコントロール・プレーン機能を使用して設定・管理されたマイクロサービス間のすべてのネットワーク通信を遮断する特別なサイドカー・プロキシを環境全体に配備することで、サービスにIstioのサポートを追加できます。
 
-Technologies like containers and container orchestration platforms like OpenShift solve the deployment of our distributed applications quite well, but are still catching up to addressing the service communication necessary to fully take advantage of distributed microservice applications. With Istio you can solve many of these issues outside of your business logic, freeing you as a developer from concerns that belong in the infrastructure.
+コンテナやOpenShiftのようなコンテナ・オーケストレーション・プラットフォームのような技術は、分散アプリケーションのデプロイメントを非常にうまく解決していますが、分散マイクロサービス・アプリケーションを十分に活用するために必要なサービス通信への対応にはまだ追いついていません。Istioを使用すると、これらの問題の多くをビジネスロジックの外で解決することができ、開発者はインフラストラクチャに属する問題から解放されます。
 
-*Congratulations!*
+*おめでとうございます!*
