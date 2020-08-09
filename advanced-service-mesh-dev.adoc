@@ -514,7 +514,6 @@ In this step, you will learn how to enable authentication. You will secure the _
 
 サービスメッシュ内のトラフィックのサービス認証を可能にする *Red Hat Single Sign-On (RH-SSO)* を導入してみましょう。
 
-_Red Hat Single Sign-On (RH-SSO)_ is based on the *Keycloak* project and enables you to secure your web applications by providing Web single sign-on (SSO) capabilities based on popular standards such as *SAML 2.0, OpenID Connect and OAuth 2.0*. The RH-SSO server can act as a SAML or OpenID Connect-based Identity Provider, mediating with your enterprise user directory or 3rd-party SSO provider for identity information and your applications via standards-based tokens. The major features include:
 Red Hat Single Sign-On (RH-SSO)_は、 *Keycloak* プロジェクトをベースにしており、 *SAML 2.0、OpenID Connect、OAuth 2.0* などの一般的な標準に基づいたWebシングルサインオン(SSO)機能を提供することで、Webアプリケーションのセキュリティを確保することができます。RH-SSOサーバは、SAMLまたはOpenID ConnectベースのIdentity Providerとして機能し、標準ベースのトークンを介して、アイデンティティ情報やアプリケーションと企業のユーザーディレクトリまたはサードパーティのSSOプロバイダを仲介することができます。主な機能は以下の通りです:
 
 * *Authentication Server* (認証サーバ) - スタンドアロン SAML または OpenID Connect ベースの Identiry Provier として動作
@@ -536,7 +535,6 @@ image::create_project_popup.png[rhsso, 500]
 
 image::create_project_fc.png[rhsso, 700]
 
-Type `ccn-sso` in search box and click on *CCN + Red Hat Single Sign-On 7.4 on OpenJDK + PostgreSQL* catalog. Then click on *Instantiate Template*:
 検索ボックスに `ccn-sso` と入力し、 *CCN + Red Hat Single Sign-On 7.4 on OpenJDK + PostgreSQL* カタログをクリックします。その後、 *Instantiate Template* をクリックします:
 
 image::catalog_rhsso.png[rhsso, 700]
@@ -587,7 +585,6 @@ image::rhsso_istio_realm.png[sso, 700]
 Red Hat Single Sign-On は初回起動時に自己署名証明書を生成します。自己署名付き証明書ではIstioでの認証がうまくいかないので、Istio認証のテストにSSLを使わないように変更します。
 ====
 
-Next, create a new RH-SSO _client_ that is for trusted browser apps and web services in our _Istio_ realm. Go to *Clients* in the left menu then click on *Create*.
 次に、 _Istio_ レルム内の信頼されたブラウザアプリとWebサービスのための新しいRH-SSO _client_ を作成します。左メニューの *Clients* に移動し、 *Create* をクリックします。
 
 image::rhsso_clients.png[sso, 700]
@@ -596,7 +593,6 @@ _Client ID_ フィールドに `ccn-cli` と入力し、 *Save* をクリック�
 
 image::rhsso_clients_create.png[sso, 700]
 
-On the next screen, you will see details on the *Settings* tab, the only thing you need to do is to input _Valid Redirect URIs_ that can be used after successful login or logout for clients.
 次の画面では、 *Settings* タブの詳細が表示されます。あなたがする必要がある唯一のことは、クライアントのために成功したログインまたはログアウト後に使用することができる _Valid Redirect URI_ を入力することです。
 
 [source,sh,role="copypaste"]
@@ -682,10 +678,9 @@ spec:
   principalBinding: USE_ORIGIN
 ----
 
-The following fields are used above to create a Policy in Istio and are described here:
 Istioでポリシーを作成する際には、上記のように以下のフィールドを使用します。説明は以下の通りです:
 
-*issuer* - JWTを発行した発行者を識別します。 https://tools.ietf.org/html/rfc7519#section-4.1.1[issuer^] を参照のこと。通常はURLまたは電子メール・アドレス。
+* *issuer* - JWTを発行した発行者を識別します。 https://tools.ietf.org/html/rfc7519#section-4.1.1[issuer^] を参照のこと。通常はURLまたは電子メール・アドレス。
 * *jwksUri* - JWTの署名を検証するために設定されたプロバイダの公開鍵のURL。
 * *audiences* - アクセスが許可されているJWT https://tools.ietf.org/html/rfc7519#section-4.1.3[audiences^] のリスト。これらのオーディエンスのいずれかを含むJWTが受け入れられます。
 
@@ -705,7 +700,6 @@ curl -i http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAI
 
 `HTTP 401 Unauthorized` と `Origin authentication failed.` のメッセージが表示されるはずです。
 
-The expected response is here because the user has not been identified with a valid JWT token in RH-SSO. It normally takes `5 ~ 10 seconds` to initialize the authentication policy in Istio Mixer. After this things go quickly as policies are cached for some period of time.
 このレスポンスは期待どおりです。なぜなら、RH-SSOで有効なJWTトークンでユーザが識別されていないためです。Istio Mixerの認証ポリシーの初期化には、通常、`5～10秒`かかります。この後、しばらくの間はポリシーがキャッシュされるので、認証ポリシーの適用は高速に行われます。
 
 image::rhsso_call_catalog_noauth.png[sso, 900]
