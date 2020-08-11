@@ -24,7 +24,6 @@ image::istio_bookinfo.png[Bookinfo Architecture, 700]
 
 === 1. Bookinfoアプリケーションのデプロイ
 
-First, open a new browser with the link:{{ CONSOLE_URL }}[OpenShift web console^]
 まず、リンク先の {{ CONSOLE_URL }}[OpenShift web console^] で新しいブラウザを開きます。
 
 image::openshift_login.png[openshift_login, 700]
@@ -68,7 +67,6 @@ Welcome! See 'oc help' to get started.
 
 [NOTE]
 ====
-After you log in using *Login to OpenShift*, the terminal is no longer usable as a regular terminal. You can close the terminal window. You will still be logged in when you open more terminals later!
 *OpenShiftへのログイン* でログインした後は、通常のターミナルとして使用できなくなります。ターミナルのウィンドウを閉じることができます。後からさらに端末を開いてもログインしたままになります。
 ====
 
@@ -102,7 +100,7 @@ spec:
 
 image::smmr_yaml_create.png[Run yaml in console, 700]
 
-- Create**をクリックします。これで必要な _ServiceMeshMemberRoll_ が作成されます。
+- **Create** をクリックします。これで必要な _ServiceMeshMemberRoll_ が作成されます。
 
 おめでとうございます! これで新しいサービスメッシュのデプロイ先プロジェクト `{{ USER_ID }}-istio-system` に _ServiceMeshMemberRoll_ を作成することに成功しました。
 それでは、アプリケーションをサービスメッシュにデプロイしていきましょう。
@@ -116,7 +114,7 @@ CodeReady Workspaces経由でターミナルを開き、以下のコマンドを
 oc apply -n {{ USER_ID}}-bookinfo -f /projects/cloud-native-workshop-v2m3-labs/istio/bookinfo.yaml
 ----
 
-そして、Bookinfo用の_ingress gateway_を作成します:
+そして、Bookinfo用の _ingress gateway_ を作成します:
 
 [source,shell, role="copypaste"]
 ----
@@ -168,13 +166,12 @@ oc annotate deployment reviews-v2 app.openshift.io/connects-to=ratings-v1 && \
 oc annotate deployment reviews-v3 app.openshift.io/connects-to=ratings-v1
 ----
 
-Let’s wait for our application to finish deploying. Go to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-bookinfo[Topology View^] for the `{{USER_ID}}-bookinfo` project. You'll see the app components spinning up:
-アプリケーションのデプロイが終わるのを待ちましょう。プロジェクトの {{{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-bookinfo[Topology View^] に移動します。アプリのコンポーネントが起動中であることがわかります:
+アプリケーションのデプロイが終わるのを待ちましょう。プロジェクトの {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-bookinfo[Topology View^] に移動します。アプリのコンポーネントが起動中であることがわかります:
 
 image::bookinfo_topology.png[Bookinfo App, 700]
 
 各コンポーネントが完全な青丸になるのを待ちます。
-または、以下のコマンドを実行してデプロイが完了して `successfully rolled out` の結果が出るのを待つこともできます:
+または、以下のコマンドを実行し、デプロイが完了して `successfully rolled out` の結果が出るのを待つこともできます:
 
 [source,shell,role="copypaste"]
 ----
@@ -186,11 +183,11 @@ image::bookinfo_topology.png[Bookinfo App, 700]
  oc rollout status -n {{ USER_ID}}-bookinfo -w deployment/ratings-v1
 ----
 
-最後に、http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^]にアクセスします。以下のようになっているはずです:
+最後に、 http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] にアクセスします。以下のようになっているはずです:
 
 image::bookinfo.png[Bookinfo App, 700]
 
-ページを複数回リロードしてください。レビューサービスの3つの異なるバージョンでは、星の表示が異なります - _v1_ では星が全く表示されず、 _v2_ では黒い星が表示され、 _v3_ では赤い星が表示されます:
+ページを複数回リロードしてください。reviewsサービスの3つの異なるバージョンでは、星の表示が異なります - _v1_ では星が全く表示されず、 _v2_ では黒い星が表示され、 _v3_ では赤い星が表示されます:
 
 * *v1*
 
@@ -204,9 +201,9 @@ image::stars-black.png[black stars, 700]
 
 image::stars-red.png[red stars, 700]
 
-それは、レビューサービスには3つのバージョンのレビューのデプロイがあるからです。Istio のロードバランサーは _round-robin_ アルゴリズムを使用して、このサービスの 3 つのインスタンスを反復処理しています。
+それは、reviewsサービスには3つのバージョンのreviewsがデプロイされているからです。Istio のロードバランサーは _round-robin_ アルゴリズムを使用して、このサービスの 3 つのインスタンスを反復処理しています。
 
-これでOpenShiftのPodを実行して、それぞれのPodにマイクロサービスと並んで _Envoyのサイドカー_ があるはずです。マイクロサービスは productpage、details、reviewsです。レビューマイクロサービスには3つのバージョンがあることに注意してください:
+これでOpenShiftのPodを実行して、それぞれのPodにマイクロサービスと並んで _Envoyのサイドカー_ があるはずです。マイクロサービスは productpage、details、reviewsです。reviewsマイクロサービスには3つのバージョンがあることに注意してください:
 
 [source,shell, role="copypaste"]
 ----
@@ -225,6 +222,6 @@ reviews-v3-5f9d5bbd8-sz29k    2/2     Running   0          12m
 
 各マイクロサービスには、各サービスのために *2/2* コンテナが用意されていることに注目してください(1つはサービス用、もう1つはサイドカー用)。
 
-アプリケーションがデプロイされ、Istioサービスメッシュにリンクされたので、アプリケーションコード自体に触れることなく、すぐに得られる価値を見てみましょう！ 
+アプリケーションがデプロイされ、Istioサービスメッシュにリンクされたので、アプリケーションコード自体に触れることなく、すぐに得られる価値を確認できました！ 
 
 *おめでとうございます!* これで、OpenShift Service Mesh内に最初のアプリケーションが正常にデプロイされました。次のラボ _Service Visulization and Montioring_ に移りましょう。

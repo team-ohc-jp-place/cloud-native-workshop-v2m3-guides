@@ -116,7 +116,6 @@ oc rollout status -w dc/inventory -n {{USER_ID}}-inventory && \
 oc rollout status -w dc/catalog-springboot -n {{USER_ID}}-catalog
 ----
 
-This should also take about 1 minute to finish. When it's done, verify that the `inventory-database` is running with 2 pods (`2/2` in the `READY` column) with this command:
 これも1分程度で終了するはずです。終了したら、 `inventory-database` が2つのポッド( `READY` 列の `2/2` )で実行されていることを以下のコマンドで確認してください:
 
 [source,sh,role="copypaste"]
@@ -198,7 +197,7 @@ image::catalog-ui-gateway.png[catalog, 700]
 _istio ingress_ と _gateway_ と _virtual service_ を反映するのに数秒かかります。このページを開いたままにしておくと、 _Catalog UI browser_ がサービス間のトラフィックを（2秒ごとに）作成してくれるので、テストに便利です。
 ====
 
-各ポッドに _side car_ がインジェクトできたかどうかを確認します。 https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/? edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] にアクセスし、 *{{ USER_ID }}-inventory* および *{{ USER_ID }}-catalog* が選択された _Namespaces_ になっていることを確認します。その後、 _Display_ ドロップダウンで *Traffic Animation* を有効にすると、 _Catalog service_ から _Inventory service_ へのトラフィックの流れがアニメーションで表示されます:
+各ポッドに _side car_ がインジェクトできたかどうかを確認します。 https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] にアクセスし、 *{{ USER_ID }}-inventory* および *{{ USER_ID }}-catalog* が選択された _Namespaces_ になっていることを確認します。その後、 _Display_ ドロップダウンで *Traffic Animation* を有効にすると、 _Catalog service_ から _Inventory service_ へのトラフィックの流れがアニメーションで表示されます:
 
 image::kiali_graph_sidecar.png[istio, 700]
 
@@ -234,7 +233,6 @@ Istioは、TCP層でパケットを遅延させたり破損させたりするこ
 * _Delays_ (遅延)はタイミング障害です。ネットワーク遅延の増加やアップストリーム・サービスの過負荷を模倣します。
 * _Aborts_ (アボート)はクラッシュ障害です。アップストリーム・サービスの障害を模倣します。アボートは通常、HTTP エラーコードまたは TCP 接続の失敗の形で表現されます。
 
-To test our application microservices for resiliency, we will inject a failure in *50%* of the requests to the _inventory_ service, causing the service to appear to fail (and return `HTTP 5xx` errors) half of the time.
 アプリケーション内のマイクロサービスの耐障害性をテストするために、 _inventory_ サービスへのリクエストの *50%* にフォルトを注入し、時間内の半分でサービスが失敗したように見えるようにします (そして `HTTP 5xx` エラーを返します)。
 
 _inventory/rules_ ディレクトリ内の空の `inventory-default.yaml` ファイルを開き、以下をファイルにコピーします:
@@ -263,7 +261,6 @@ spec:
               number: 8080
 ----
 
-Delete the gateway to direct route catalog that was setup earlier with:
 以下を実行して、以前に設定した catalog への直接ルートののゲートウェイを削除します:
 
 [source,sh,role="copypaste"]
@@ -328,7 +325,7 @@ http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Cool
 
 image::inventory-dead-ok.png[fault-injection, 700]
 
-https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/? edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] を見ると、 _istio-ingressgateway_ からの `red` のトラフィックと、リクエストの約50%が _HTTP Traffic_ の右側に _5xx_ と表示されています。catalogとingress gatewayから同時に来るトラフィックがあるので、 _正確に_ 50%ではないかもしれませんが、時間の経過とともに50%に近づくでしょう。
+https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] を見ると、 _istio-ingressgateway_ からの `red` のトラフィックと、リクエストの約50%が _HTTP Traffic_ の右側に _5xx_ と表示されています。catalogとingress gatewayから同時に来るトラフィックがあるので、 _正確に_ 50%ではないかもしれませんが、時間の経過とともに50%に近づくでしょう。
 
 [WARNING]
 ====
@@ -460,7 +457,7 @@ CodeReady Workspacesターミナルから以下のコマンドを実行して、
 oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/inventory/rules/inventory-cb.yaml -n {{ USER_ID }}-inventory
 ----
 
-Inventoryサービスの最大接続数を 1 に、最大保留中のリクエストを 1 に設定しました。 したがって、短期間に 2 つ以上のリクエストをinventoryサービスに送信すると、1 つは許可され、1 つは保留され、保留中のリクエストが処理されるまで追加のリクエストは拒否されます。さらに、サーバーエラー（HTTP 5xx）を返すホストを検出し、15分間、負荷分散プールからポッドをイジェクトします。それぞれの設定パラメータがどのようなものかは、https://istio.io/docs/tasks/traffic-management/circuit-breaking[Istio spec^] を参照してください。
+Inventoryサービスの最大接続数を 1 に、最大保留中のリクエストを 1 に設定しました。 したがって、短期間に 2 つ以上のリクエストをinventoryサービスに送信すると、1 つは許可され、1 つは保留され、保留中のリクエストが処理されるまで追加のリクエストは拒否されます。さらに、サーバーエラー（HTTP 5xx）を返すホストを検出し、15分間、負荷分散プールからポッドをイジェクトします。それぞれの設定パラメータがどのようなものかは、 https://istio.io/docs/tasks/traffic-management/circuit-breaking[Istio spec^] を参照してください。
 
 === 4. サービスの過負荷
 
@@ -503,7 +500,6 @@ oc create -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/catalog/rules/ca
 
 === 6. シングルサインオンによる認証の有効化
 
-In this step, you will learn how to enable authentication. You will secure the _Catalog_ endpoint. We will use JWT with Red Hat Single Sign On which is part of the Red Hat Runtimes.
 このステップでは、認証を有効にする方法を学習します。 _Catalog_ エンドポイントをセキュアにします。Red Hat Runtimesの一部であるRed Hat Single Sign Onを利用してJWTを適用します。
 
 参考情報:
@@ -514,7 +510,7 @@ In this step, you will learn how to enable authentication. You will secure the _
 
 サービスメッシュ内のトラフィックのサービス認証を可能にする *Red Hat Single Sign-On (RH-SSO)* を導入してみましょう。
 
-Red Hat Single Sign-On (RH-SSO)_は、 *Keycloak* プロジェクトをベースにしており、 *SAML 2.0、OpenID Connect、OAuth 2.0* などの一般的な標準に基づいたWebシングルサインオン(SSO)機能を提供することで、Webアプリケーションのセキュリティを確保することができます。RH-SSOサーバは、SAMLまたはOpenID ConnectベースのIdentity Providerとして機能し、標準ベースのトークンを介して、アイデンティティ情報やアプリケーションと企業のユーザーディレクトリまたはサードパーティのSSOプロバイダを仲介することができます。主な機能は以下の通りです:
+_Red Hat Single Sign-On (RH-SSO)_ は、 *Keycloak* プロジェクトをベースにしており、 *SAML 2.0、OpenID Connect、OAuth 2.0* などの一般的な標準に基づいたWebシングルサインオン(SSO)機能を提供することで、Webアプリケーションのセキュリティを確保することができます。RH-SSOサーバは、SAMLまたはOpenID ConnectベースのIdentity Providerとして機能し、標準ベースのトークンを介して、アイデンティティ情報やアプリケーションと企業のユーザーディレクトリまたはサードパーティのSSOプロバイダを仲介することができます。主な機能は以下の通りです:
 
 * *Authentication Server* (認証サーバ) - スタンドアロン SAML または OpenID Connect ベースの Identiry Provier として動作
 * *User Federation* - ユーザー情報のソースとして LDAP サーバーおよび Microsoft Active Directory を認定
@@ -561,11 +557,11 @@ oc label dc/sso app.kubernetes.io/part-of=sso --overwrite && \
 oc annotate dc/sso-postgresql app.openshift.io/connects-to=sso --overwrite
 ----
 
-{{console_url }}/topology/ns/{{user_id }}}-rhsso[トポロジービュー^] に戻ります:
+{{console_url }}/topology/ns/{{user_id }}-rhsso[トポロジービュー^] に戻ります:
 
 image::rhsso-topology.png[sso, 700]
 
-これが終わったら（1～2分かかるかもしれません）、 https://secure-sso-{{{ USER_ID }}}-rhsso.{{ ROUTE_SUBDOMAIN}}[Secure SSO Route^] をクリックして、以下のようにRH-SSOのWebコンソールにアクセスします:
+これが終わったら（1～2分かかるかもしれません）、 https://secure-sso-{{ USER_ID }}-rhsso.{{ ROUTE_SUBDOMAIN}}[Secure SSO Route^] をクリックして、以下のようにRH-SSOのWebコンソールにアクセスします:
 
 image::rhsso_landing_page.png[sso, 700]
 

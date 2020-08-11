@@ -55,7 +55,7 @@ image::che-landing.png[cdw, 700]
 
 image::che-workspace.png[cdw, 600, align="center"]
 
-このIDEはEclipse Cheをベースにしています(すなわちMicroSoft VS Code editorをベースにしているということでもあります)。
+このIDEはEclipse Cheをベースにしています(すなわちMicrosoft VS Code editorをベースにしているということでもあります)。
 
 左側には、プロジェクトエクスプローラ、検索、バージョン管理（Gitなど）、デバッグ、その他のプラグインの間をナビゲートするためのアイコンがあります。 あなたはこのワークショップの間にこれらを使用します。自由にクリックして何ができるか見てみてください:
 
@@ -68,12 +68,10 @@ image::crw-icons.png[cdw, 400, align="center"]
 
 CodeReady Workspaces の多くの機能は *Commands* からアクセスできます。いくつかのコマンドは、ホームページにリンク付きで表示されています（例：_New File..._, _Git Clone..._, など）。
 
-If you ever need to run commands that you don't see in a menu, you can press kbd:[F1] to open the command window, or the more traditional kbd:[Control+SHIFT+P] (or kbd:[Command+SHIFT+P] on Mac OS X).
 メニューにないコマンドを実行したい場合は、 kbd:[F1] を押してコマンドウィンドウを開くか、 kbd:[Control+SHIFT+P] (Mac OS X では kbd:[Command+SHIFT+P] ) を押してコマンドを実行することができます。
 
 ==== プロジェクトのインポート
 
-Let's import our first project. Click on **Git Clone..** (or type kbd:[F1], enter 'git' and click on the auto-completed _Git Clone.._ )
 最初のプロジェクトをインポートしてみましょう。 **Git Clone...** をクリックします (または kbd:[F1] と入力して 'git' と入力し、自動補完された _Git Clone..._ をクリックします)。
 
 image::che-workspace-gitclone.png[cdw, 600, align="center"]
@@ -89,13 +87,13 @@ https://github.com/RedHat-Middleware-Workshops/cloud-native-workshop-v2m3-labs.g
 
 image::crw-clone-repo.png[crw, 600, align="center"]
 
-プロジェクトはワークスペースにインポートされ、右上の *エクスプローラ* ペインをクリックすると、プロジェクト エクスプローラに表示されます:
+プロジェクトはワークスペースにインポートされ、左上の *エクスプローラ* ペインをクリックすると、プロジェクト エクスプローラに表示されます:
 
 image::crw-clone-explorer.png[crw, 600, align="center"]
 
 ==== 重要: 適切な Git ブランチをチェックアウトしてください
 
-プロジェクトファイルの正しいバージョンを使用していることを確認するには、CodeReadyターミナルでこのコマンドを実行してください:
+プロジェクトファイルの正しいバージョンを使用していることを確実にするために、CodeReadyターミナルでこのコマンドを実行してください:
 
 [source,sh,role="copypaste"]
 ----

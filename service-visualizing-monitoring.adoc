@@ -22,7 +22,7 @@ for i in {1..1000} ; do curl -o /dev/null -s -w "%{http_code}\n" http://$BOOK_UR
 
 === 2. Kiali を試す
 
-*Kiali*は、単一のUIからサービスメッシュを管理・監視することができます。このUIでは、設定の表示、トラフィックの流れと健全性の監視、トレースの分析を行うことができます。
+*Kiali* は、単一のUIからサービスメッシュを管理・監視することができます。このUIでは、設定の表示、トラフィックの流れと健全性の監視、トレースの分析を行うことができます。
 
 https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Kiali console^] を開きます。
 
@@ -67,7 +67,7 @@ image::kiali-app-productpage-outbound.png[kiali, 700]
 
 image::kiali-app-productpage-workload.png[kiali, 700]
 
-*product-page-v1* ワークロードをクリックしてください。ここでは、ワークロードに含まれるポッドやサービスなど、ワークロードの詳細を見ることができます:
+*productpage-v1* ワークロードをクリックしてください。ここでは、ワークロードに含まれるポッドやサービスなど、ワークロードの詳細を見ることができます:
 
 image::kiali-app-productpage-workload-v1.png[kiali, 700]
 
@@ -113,7 +113,7 @@ image::kiali-tracing-traces.png[kiali, 700]
 
 image::kiali-tracing-traces-trace.png[kiali, 700]
 
-このトレースはいくつかの入れ子になったスパンで構成されており、それぞれがBookinfoサービスコールに対応しており、すべて `/productpage リクエストに応答して実行されています。
+このトレースはいくつかの入れ子になったスパンで構成されており、それぞれがBookinfoサービスコールに対応しており、すべて `/productpage` リクエストに応答して実行されています。
 
 全体の処理時間は23.23msで、detailsサービスが2.04ms、reviewsサービスが7.17ms、ratingサービスが0.72msでした。リモートサービスへの各コールは、クライアント側とサーバー側のスパンで表されます。
 
@@ -125,7 +125,7 @@ https://prometheus.io/[Prometheus] は定期的にアプリケーションを _s
 
 https://prometheus-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Prometheus console^] を開き、 *Log in with OpenShift* をクリックします。
 
-_OpenShift Login_ の画面が表示されるはずです。以下のようにユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このようなプロメテウスのホーム画面が表示されます:
+_OpenShift Login_ の画面が表示されるはずです。ユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このようなPrometheusのホーム画面が表示されます:
 
 image::istio-prometheus-landing.png[istio-prometheus, 700]
 
@@ -160,7 +160,6 @@ istio_request_duration_seconds_count{destination_service=~"productpage.*"}
 istio_request_duration_seconds_count{destination_service=~"reviews.*", destination_version="v3"}
 ----
 
-* Rate of requests over the past 5 minutes to all _productpage_ services:
 * 全ての _productpage_ サービスへの過去5分間のリクエストレート:
 
 [source,sh,role="copypaste"]
@@ -177,7 +176,7 @@ https://grafana.com/[Grafana^] は、Istio データプレーンから抽出さ�
 
 https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^] を開きます。
 
-_OpenShift Login_ の画面が表示されるはずです。以下のようにユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このような Prometheus のホーム画面が表示されます:
+_OpenShift Login_ の画面が表示されるはずです。ユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このような Prometheus のホーム画面が表示されます:
 
 image::grafana-home.png[Grafana graph, 700]
 
@@ -218,7 +217,7 @@ image::grafana-workload-metrics.png[Grafana graph, 700]
 
 このダッシュボードには、ワークロードのメトリクスと、クライアント(インバウンド)とサービス(アウトバウンド)のワークロードのメトリクスが表示されます。ダッシュボードの上部にあるドロップダウンリストを使って、別のワークロードに切り替えたり、インバウンドまたはアウトバウンドのワークロードでメトリクスをフィルタリングしたりすることができます。
 
-ダッシュボードの作成、設定、編集方法については、http://docs.grafana.org/[Grafana documentation^] を参照してください。
+ダッシュボードの作成、設定、編集方法については、 http://docs.grafana.org/[Grafana documentation^] を参照してください。
 
 開発者としては、アプリケーション自体に何もしなくても、これらのメトリクスからかなりの情報を得ることができます。次のセクションでは、新しいツールを使って、アプリケーションの問題を診断して修正し、アプリケーションをより回復力のある堅牢なものにするための Istio の真の力を見てみましょう。
 
@@ -226,7 +225,6 @@ image::grafana-workload-metrics.png[Grafana graph, 700]
 
 このタスクでは、ウェイトと HTTP ヘッダーに基づいて動的なリクエストルーティングを設定する方法を示します。
 
-_Route rules_ control how requests are routed within an Istio service mesh. Route rules provide:
 _Route rules_ は、Istio サービスメッシュ内でリクエストがどのようにルーティングされるかを制御します。 Route ruleは以下を提供します:
 
 * **Timeouts** 遅いサービスの待ち時間を最小限に抑える
@@ -271,7 +269,6 @@ oc create -n {{ USER_ID}}-bookinfo -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v
 oc get virtualservices -n {{ USER_ID}}-bookinfo -o yaml
 ----
 
-There are default _virtual services_ for each service, such as the one that forces all traffic to the _v1_ version of the _reviews_ service:
 各サービスにはデフォルトの _virtual services_ があり、例えば、すべてのトラフィックを _reviews_ サービスの _v1_ バージョンに強制するものなどがあります:
 
 [source, shell, role="copypaste"]
@@ -299,7 +296,6 @@ spec:
         subset: v1
 ----
 
-Now, access the application again in your web browser using the below link and reload the page several times - you should not see any rating stars since *reviews:v1* does not access the _ratings_ service.
 さて、以下のリンクを使用してWebブラウザでアプリケーションに再度アクセスし、ページを数回リロードしてください - *reviews:v1* が _ratings_ サービスにアクセスしていないので、評価の星は表示されないはずです。
 
 [NOTE]
@@ -312,7 +308,7 @@ Now, access the application again in your web browser using the below link and r
 
 image::ratings-stopped-bookinfo.png[Versions, 700]
 
-https://grafana-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^] に戻り、 *Istio Service Dashboard* を選択し、 _Service_ ドロップダウンで `ratings.{{USER_ID}}}-bookinfo.svc.cluster.local` サービスを選択します:
+https://grafana-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^] に戻り、 *Istio Service Dashboard* を選択し、 _Service_ ドロップダウンで `ratings.{{USER_ID}}-bookinfo.svc.cluster.local` サービスを選択します:
 
 image::ratings-select-dash.png[Versions, 700]
 
@@ -322,7 +318,7 @@ image::ratings-stopped.png[Versions, 700]
 
 === 8. IstioによるA/Bテスト
 
-jason_というテストユーザのために、 `productpage` のトラフィックを _reviews:v2_ (黒い星) に、その他のトラフィックを _reviews:v3_ (赤い星) にルーティングして、評価サービスを有効にしてみましょう。以下を実行します:
+_jason_ というテストユーザのために、 `productpage` のトラフィックを _reviews:v2_ (黒い星) に、その他のトラフィックを _reviews:v3_ (赤い星) にルーティングして、評価サービスを有効にしてみましょう。以下を実行します:
 
 [source, shell, role="copypaste"]
 ----
@@ -362,7 +358,7 @@ http:
 
 これは、 _jason_ ユーザーがセットされたクッキーを含むすべての着信 HTTP リクエストトラフィックを *reviews:v2* に、その他のトラフィックを *reviews:v3* に送信せよと言っています。
 
-さて、http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] にアクセスし、 *Sign In* (右上)をクリックしてサインインします:
+さて、 http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] にアクセスし、 *Sign In* (右上)をクリックしてサインインします:
 
 * Username: *jason*
 * Password: *jason*
@@ -383,7 +379,6 @@ image::ratings-signout.png[Ratings for Test User, 700]
 *おめでとうございます!* このラボでは、Istioを使用して、アプリケーションのサービスの特定のバージョンに100%のトラフィックを送信しました。次に
 ルールを使用して、リクエスト中の条件 (例: ヘッダやユーザクッキー) にマッチするものに基づいて、他のバージョンのトラフィックを選択的に送信しました。
 
-This routing allows you to selectively send traffic to different service instances, e.g. for testing, or blue/green deployments, or dark launches, and more.
 このルーティング機能により、テスト、ブルー/グリーンデプロイメント、ダークローンチなどにおいて、異なるサービスインスタンスにトラフィックを選択的に送信することができます。
 
 これを次のステップで探っていきます。
