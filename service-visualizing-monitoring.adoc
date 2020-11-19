@@ -241,7 +241,7 @@ _Route rules_ は、Istio サービスメッシュ内でリクエストがどの
 
 === 6. サービスバージョン
 
-Istioはサービスバージョンというコンセプトを導入しました。これは、サービスインスタンスをバージョン (_v1_, _v2_) や環境 (_staging_, _prod_) によって細分化するためのより細かい方法です。これらのバリエーションは必ずしも異なる API のバージョンである必要はありません: 同じサービスを異なる環境 (prod, staging, dev など) にデプロイして反復的に変更することができます。これが使用される一般的なシナリオとしては、A/B テストやカナリーロールアウトなどがあります。Istioの https://istio.io/docs/concepts/traffic-management/rules-configuration.html[traffic routing rules^] は、サービス間のトラフィックを追加で制御するためのサービスバージョンを参照することができます。
+Istioはサービスバージョンというコンセプトを導入しました。これは、サービスインスタンスをバージョン (_v1_, _v2_) や環境 (_staging_, _prod_) によって細分化するためのより細かい方法です。これらのバリエーションは必ずしも異なる API のバージョンである必要はありません: 同じサービスを異なる環境 (prod, staging, dev など) にデプロイして反復的に変更することができます。これが使用される一般的なシナリオとしては、A/B テストやカナリーロールアウトなどがあります。Istioの https://istio.io/latest/docs/concepts/traffic-management/#routing-rules[traffic routing rules^] は、サービス間のトラフィックを追加で制御するためのサービスバージョンを参照することができます。
 
 image::versions.png[Versions, 500]
 
