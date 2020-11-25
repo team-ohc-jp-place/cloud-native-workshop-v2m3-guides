@@ -87,6 +87,10 @@ https://github.com/RedHat-Middleware-Workshops/cloud-native-workshop-v2m3-labs.g
 
 image::crw-clone-repo.png[crw, 600, align="center"]
 
+Click on *Select Repository Location* then click on *Add to Workpace*:
+
+image::crw-add-workspace.png[crw, 600, align="center"]
+
 プロジェクトはワークスペースにインポートされ、左上の *エクスプローラ* ペインをクリックすると、プロジェクト エクスプローラに表示されます:
 
 image::crw-clone-explorer.png[crw, 600, align="center"]
@@ -100,15 +104,14 @@ image::crw-clone-explorer.png[crw, 600, align="center"]
 cd $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs && git checkout ocp-4.5
 ----
 
-=== 他のプロジェクトの削除
-
-もし今日、他のモジュール(例えば `cloud-native-workshop-v2m1-lab`)を完了している場合は、エクスプローラでプロジェクト名を右クリックして *Delete* を選択し、警告を受け入れてワークスペースからそれらを削除してください。このラボのためにインポートした新しいプロジェクトを削除しないように注意してください。
-
-image::remove-workspace.png[remove, 700]
-
 [NOTE]
 ====
 CodeReady ワークスペースのターミナルウィンドウについて。Developer ワークスペースで実行しているコンテナのいずれかのターミナルウィンドウを開くことができます。これらのラボの残りの部分については、ターミナルでコマンドを実行する必要がある場合はいつでも、右側の **>_New Terminal** コマンドを使用できます:
-====
 
-image::codeready-workspace-terminal.png[codeready-workspace-terminal, 600, align="center"]
+image::codeready-workspace-terminal.png[codeready-workspace-terminal, 700]
+====
+=== Remove other projects
+
+If you've completed other modules today (such as `cloud-native-workshop-v2m1-labs`), remove them from your workspace by right-clicking on the project name in the explorer and choose *Delete* and accept the warning. Be sure not to delete the new project you just imported for this lab!
+
+image::remove-workspace.png[remove, 700]
