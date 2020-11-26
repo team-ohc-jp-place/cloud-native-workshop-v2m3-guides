@@ -197,7 +197,7 @@ image::catalog-ui-gateway.png[catalog, 700]
 _istio ingress_ と _gateway_ と _virtual service_ を反映するのに数秒かかります。このページを開いたままにしておくと、 _Catalog UI browser_ がサービス間のトラフィックを（2秒ごとに）作成してくれるので、テストに便利です。
 ====
 
-各ポッドに _side car_ がインジェクトできたかどうかを確認します。 https://kiali-{{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] にアクセスし、 *{{ USER_ID }}-inventory* および *{{ USER_ID }}-catalog* が選択された _Namespaces_ になっていることを確認します。その後、 _Display_ ドロップダウンで *Traffic Animation* を有効にすると、 _Catalog service_ から _Inventory service_ へのトラフィックの流れがアニメーションで表示されます:
+各ポッドに _side car_ がインジェクトできたかどうかを確認します。 https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/console/graph/namespaces/?edges=noEdgeLabels&graphType=versionedApp&namespaces={{ USER_ID }}-catalog%2C{{ USER_ID }}-inventory&unusedNodes=false&injectServiceNodes=true&duration=60&pi=15000&layout=dagre[Kiali Graph page^] にアクセスし、 *{{ USER_ID }}-inventory* および *{{ USER_ID }}-catalog* が選択された _Namespaces_ になっていることを確認します。その後、 _Display_ ドロップダウンで *Traffic Animation* を有効にすると、 _Catalog service_ から _Inventory service_ へのトラフィックの流れがアニメーションで表示されます:
 
 image::kiali_graph_sidecar.png[istio, 700]
 
