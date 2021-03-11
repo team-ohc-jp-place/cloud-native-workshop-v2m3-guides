@@ -112,7 +112,7 @@ image::codeready-workspace-terminal.png[codeready-workspace-terminal, 700]
 ====
 === 他のプロジェクトを削除する
 
-他のモジュール(`cloud-native-workshop-v2m1-labs`など), を完了した場合は、エクスプローラーでプロジェクト名を右クリックして削除を選択し、警告を受け入れてワークスペースから削除してください。
+他のモジュール( `cloud-native-workshop-v2m1-labs` など), を完了した場合は、エクスプローラーでプロジェクト名を右クリックして削除を選択し、警告を受け入れてワークスペースから削除してください。
 このラボのためにインポートした新しいプロジェクトを削除しないように注意してください。
 
 image::remove-workspace.png[remove, 700]
