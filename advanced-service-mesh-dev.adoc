@@ -716,7 +716,7 @@ export TOKEN=$( curl -X POST 'http://sso-{{ USER_ID }}-rhsso.{{ ROUTE_SUBDOMAIN 
 
 [source,sh,role="copypaste"]
 ----
-curl -H "Authorization: Bearer $TOKEN" http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/services/products | jq
+curl -s -H "Authorization: Bearer $TOKEN" http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}/services/products | jq
 ----
 
 以下のような期待される出力が表示されるはずです:
