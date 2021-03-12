@@ -123,7 +123,7 @@ image::kiali-tracing-traces-trace.png[kiali, 700]
 
 https://prometheus.io/[Prometheus] は定期的にアプリケーションを _scrape_ してメトリクスを取得します (デフォルトではアプリケーションの `/metrics` エンドポイント)。Istio 用の Prometheus アドオンは、Istio Mixer エンドポイントを _scrape_ して、公開されたメトリクスを収集するようにあらかじめ設定された Prometheus サーバです。Prometheus は、それらのメトリクスの永続的な保存とクエリのメカニズムを提供します。
 
-https://prometheus-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Prometheus console^] を開き、 *Log in with OpenShift* をクリックします。
+https://prometheus-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Prometheus console^] を開き、 *Log in with OpenShift* をクリックします。
 
 _OpenShift Login_ の画面が表示されるはずです。ユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このようなPrometheusのホーム画面が表示されます:
 
