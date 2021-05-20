@@ -87,7 +87,7 @@ https://github.com/RedHat-Middleware-Workshops/cloud-native-workshop-v2m3-labs.g
 
 image::crw-clone-repo.png[crw, 600, align="center"]
 
-Click on *Select Repository Location* then click on *Add to Workpace*:
+*Select Repository Location* をクリックし、*Add to Workpace* をクリックします。
 
 image::crw-add-workspace.png[crw, 600, align="center"]
 
