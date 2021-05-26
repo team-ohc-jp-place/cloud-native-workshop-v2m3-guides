@@ -3,12 +3,12 @@ config:
 
 modules:
   workshop-environment:
-    name: Your Workshop Environment
+    name: 使用しているワークショップの環境
   getting-started-service-mesh:
-    name: Getting Started with Service Mesh
+    name: サービスメッシュの使用を開始する
   creating-distributed-services:
-    name: Creating Distributed Services
+    name: 分散サービスの作成
   service-visualizing-monitoring:
-    name: Service Visualization and Monitoring
+    name: サービスの可視化と監視
   advanced-service-mesh-dev:
-    name: Advanced Service Mesh Development
+    name: サービスメッシュの高度なデプロイメント

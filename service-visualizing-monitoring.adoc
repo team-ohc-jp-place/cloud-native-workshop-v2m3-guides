@@ -1,14 +1,14 @@
-= Lab 2 - Service Visualization and Monitoring
+= Lab 2 - サービスの可視化と監視
 :experimental:
 :imagesdir: images
 
-In this lab you will visualize your service mesh using *Kiali*, *Prometheus*, *Grafana* and you will lean how to configure basic *Istio functionalities* such as *VirtualService* and *A/B Testing*.
+このラボでは、*Kiali*, *Prometheus*, *Grafana* を使ってサービスメッシュを可視化し、*VirtualService* や *A/B Testing* などの基本的な *Istioの機能* を設定する方法を学びます。
 
-=== 1. Generating application load
+=== 1. アプリケーション負荷の生成
 
-To get a better idea of the power of metrics, let’s setup an endless loop that will continually access the application and generate load for about 30 minutes. We’ll open up a separate terminal just for this purpose.
+メトリクスの力をよりよく理解するために、アプリケーションに継続的にアクセスし、約 30 分間負荷を生成するエンドレスループを設定してみましょう。この目的のためだけに別のターミナルを開きます。
 
-Open a new _CodeReady Workspaces Terminal_ and run the following command:
+新しい _CodeReady Workspaces Terminal_ を開き、以下のコマンドを実行します:
 
 [source, shell, role="copypaste"]
 ----
@@ -17,117 +17,116 @@ BOOK_URL=istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}
 for i in {1..1000} ; do curl -o /dev/null -s -w "%{http_code}\n" http://$BOOK_URL/productpage ; sleep 2 ; done
 ----
 
-This command will endlessly access the application and report the HTTP status result in a separate terminal window. The script should return an endless `200`.
+このコマンドは、アプリケーションにエンドレスでアクセスし、別のターミナルウィンドウでHTTPステータスの結果を報告します。スクリプトはエンドレスで `200` を返すはずです。
 
-With this application load running, metrics will become much more interesting in the next few steps.
+このアプリケーションの負荷が実行されている状態で、メトリクスは次のいくつかのステップではるかに興味深いものになります。
 
-=== 2. Examine Kiali
+=== 2. Kiali を試す
 
-*Kiali* allows you to manage and monitor your mesh from a single UI. This UI will allow you to view configurations, monitor traffic flow and
-health, and analyze traces.
+*Kiali* は、単一のUIからサービスメッシュを管理・監視することができます。このUIでは、設定の表示、トラフィックの流れと健全性の監視、トレースの分析を行うことができます。
 
-Open the https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Kiali console^].
+https://kiali-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Kiali console^] を開きます。
 
-You should see _OpenShift Login_ screen. Enter the username and password as below and click _Log In_.
+_OpenShift Login_ の画面が表示されるはずです。以下のようにユーザー名とパスワードを入力し、_Log In_ をクリックします。
 
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
-You will see _Overvew_ page in Kiali like this:
+Kialiでは、このように _Overvew_ のページが表示されます:
 
 image::kiali-all-namespaces.png[kiali, 700]
 
-==== Service Graph
+==== サービスグラフ
 
-Click on the _Graph_ page on the left and check *Traffic Animation* in *Display*. You'll also need to select the `{{ USER_ID }}-bookinfo` project in the _Namespace_ dropdown at the top:
+左側の _Graph_ ページをクリックして、*Display* の *Traffic Animation* にチェックを入れます。また、上部の _Namespace_ ドロップダウンで `{{ USER_ID }}-bookinfo` プロジェクトを選択する必要があります:
 
 image::kiali-service-graph.png[kiali, 700]
 
-It shows a graph with all the microservices, connected by the requests going through them. On this page, you can see how services interact with each other. Observe that traffic from _productpage_ to _reviews_ is equally hitting all three versions of the reviews service, and that _v2_ and _v3_ are in turn hitting the _ratings_ service (while _v1_ does not, so therefore you get no _stars_ when you get load-balanced to _v1_).
+これは、すべてのマイクロサービスが、それらを通過するリクエストによって接続されたグラフを示しています。このページでは、サービスがどのように相互作用しているかを見ることができます。 _productpage_ から _reviews_ へのトラフィックが、3 つのバージョンの reviews サービスすべてに均等にヒットしていること、そして _v2_ と _v3_ が順番に _ratings_ サービスにヒットしていることに注目してください (一方で _v1_ はヒットしていないので、_v1_ に負荷分散しても _stars_ は実行されません)。
 
-==== Applications
+==== アプリケーション
 
-Click on *Applications* menu in the left navigation. On this page you can view a listing of all the services that are running in the cluster, and additional information about them, such as health status.
+左側のナビゲーションの *Applications* メニューをクリックしてください。このページでは、クラスタ内で実行されているすべてのサービスの一覧と、ヘルスステータスなどの追加情報を表示することができます。
 
 image::kiali-applications.png[kiali, 700]
 
-Click on the *productpage* application to see its details. You can also see the health of a service on the *Health* section when it’s online and responding to requests without errors:
+*productpage* のアプリケーションをクリックすると、その詳細を見ることができます。また、サービスがオンラインになっていて、リクエストにエラーなく対応している場合は、*Health* の項目でサービスのヘルスステータスを確認することができます。
 
 image::kiali-app-productpage.png[kiali, 700]
 
-By clicking on *Inbound Metrics*, you can see the metrics for an application, like this:
+*Inbound Metrics* をクリックすると、以下のようにアプリケーションのメトリクスを見ることができます:
 
 image::kiali-app-productpage-inbound.png[kiali, 700]
 
-By clicking on *Outbound Metrics*, you can see the metrics for an application, like this:
+*Outbound Metrics* をクリックすると、以下のようにアプリケーションのメトリクスを見ることができます:
 
 image::kiali-app-productpage-outbound.png[kiali, 700]
 
-==== Workloads
+==== ワークロード
 
-Click on the *Workloads* menu in the left navigation. On this page you can view a listing of all the workloads that are present in your application.
+左側のナビゲーションの *Workloads* メニューをクリックします。このページでは、アプリケーションに存在するすべてのワークロードのリストを見ることができます。
 
 image::kiali-app-productpage-workload.png[kiali, 700]
 
-Click on the *productpage-v1* workload. Here you can see details for the workload, such as the pods and services that are included in it:
+*productpage-v1* ワークロードをクリックしてください。ここでは、ワークロードに含まれるポッドやサービスなど、ワークロードの詳細を見ることができます:
 
 image::kiali-app-productpage-workload-v1.png[kiali, 700]
 
-By clicking _Inbound Metrics_, you can check the metrics for the workload. The metrics are the same as the _Application_ ones.
+_Inbound Metrics_ をクリックすると、ワークロードのメトリクスを確認することができます。メトリクスは _Application_ のものと同じです。
 
-==== Services
+==== サービス
 
-Click on *Services* menu in the left navigation. Here, you can see the listing of all services.
+左のナビゲーションの *Services* メニューをクリックしてください。ここでは、すべてのサービスの一覧を見ることができます。
 
 image::kiali-services.png[kiali, 700]
 
-Click on *productpage* service which will show you the details of the service, such as metrics, traces, workloads, virtual services, destination rules and more:
+*productpage* サービスをクリックすると、メトリクス、トレース、ワークロード、仮想サービス、デスティネーションルールなどのサービスの詳細が表示されます:
 
 image::kiali-services-productpage.png[kiali, 700]
 
-==== Distributed Tracing
+==== 分散トレース
 
-Kiali also features integration with https://www.jaegertracing.io/[Jaeger^].  This lets you follow the path of a request through various microservices that make up an application (without having to update the app itself!).
+Kiali は https://www.jaegertracing.io/[Jaeger^] との統合機能も備えています。 これにより、アプリケーションを構成する様々なマイクロサービスを介してリクエストのパスをたどることができます（アプリ自体を更新する必要はありません！）。
 
-To view the traces being generated, click on the **Distributed Tracing** link on the left:
+生成されたトレースを表示するには、左側の **Distributed Tracing** リンクをクリックします:
 
 image::kiali-tracing.png[kiali, 700]
 
-This will open the https://jaeger-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Jaeger Query console^].
+これで https://jaeger-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Jaeger Query console^] が開きます。
 
-You should see the _OpenShift Login_ screen. Enter the username and password as below and click _Log In_.
+_OpenShift Login_ の画面が表示されるはずです。以下のようにユーザー名とパスワードを入力し、 _Log In_ をクリックします:
 
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
-If you have Requested permissions to authorize access Jaeger, click on Allow selected permissions. You will land on the Jaeger query page:
+Jaegerへのアクセスを許可する権限を要求している場合は、［Allow selected permissions］をクリックします。Jaegerのクエリページが表示されます。
 
 image::kiali-tracing-jaeger.png[kiali, 700]
 
 * **Service**: `productpage.{{USER_ID}}-bookinfo`
 * **Operation**: `all`
 
-Then click **Find Traces**. This will show you recent traces:
+次に **Find Traces** をクリックします。これで最近のトレースが表示されます:
 
 image::kiali-tracing-traces.png[kiali, 700]
 
-Click on one of them, as shown above to get detailed trace and span data:
+上図のように、そのうちの1つをクリックすると、詳細なトレースとスパンのデータが得られます:
 
 image::kiali-tracing-traces-trace.png[kiali, 700]
 
-This trace consists of a few nested spans, each corresponding to a Bookinfo Service call, all performed in response to a `/productpage request.
+このトレースはいくつかの入れ子になったスパンで構成されており、それぞれがBookinfoサービスコールに対応しており、すべて `/productpage` リクエストに応答して実行されています。
 
-Overall processing time was 23.23ms, with the details Service taking 2.04ms, the reviews Service taking 7.17ms, and the ratings Service taking 0.72ms. Each of the calls to remote Services is represented by a client-side and server-side span.
+全体の処理時間は23.23msで、detailsサービスが2.04ms、reviewsサービスが7.17ms、ratingサービスが0.72msでした。リモートサービスへの各コールは、クライアント側とサーバー側のスパンで表されます。
 
-You can use this information (and even compare two different traces) to spot problems with applications quickly.
+この情報を使用して（さらに2つの異なるトレースを比較して）、アプリケーションの問題を迅速に発見することができます。
 
-=== 3. Querying Metrics with Prometheus
+=== 3. Prometheus によるメトリクスのクエリー
 
-https://prometheus.io/[Prometheus] will periodically _scrape_ applications to retrieve their metrics (by default on the `/metrics` endpoint of the application). The Prometheus add-on for Istio is a Prometheus server that comes pre-configured to _scrape_ Istio Mixer endpoints to collect its exposed metrics. It provides a mechanism for persistent storage and querying of those metrics metrics.
+https://prometheus.io/[Prometheus] は定期的にアプリケーションを _scrape_ してメトリクスを取得します (デフォルトではアプリケーションの `/metrics` エンドポイント)。Istio 用の Prometheus アドオンは、Istio Mixer エンドポイントを _scrape_ して、公開されたメトリクスを収集するようにあらかじめ設定された Prometheus サーバです。Prometheus は、それらのメトリクスの永続的な保存とクエリのメカニズムを提供します。
 
-Open the https://prometheus-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Prometheus console^] and click on *Log in with OpenShift*.
+https://prometheus-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Prometheus console^] を開き、 *Log in with OpenShift* をクリックします。
 
-You should see _OpenShift Login_ screen. Enter the username and password as below and click _Log In_. If you have _Requested permissions_ to authorize access Prometheus, click on *Allow selected permissions*. Then, you will see Prometheus home screen, similar to this:
+_OpenShift Login_ の画面が表示されるはずです。ユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このようなPrometheusのホーム画面が表示されます:
 
 [NOTE]
 ====
@@ -136,146 +135,147 @@ You might see this "Warning! Detected 54.68 seconds time difference between your
 
 image::istio-prometheus-landing.png[istio-prometheus, 700]
 
-In the `Expression` input box at the top of the web page, enter the following text. Then, click the *Execute* button.
+ウェブページの上部にある `Expression` の入力ボックスに、以下のテキストを入力します。そして、 *Execute* ボタンをクリックしてください。
 
 [source,sh,role="copypaste"]
 ----
 istio_request_duration_milliseconds_count
 ----
 
-You should see a listing of each of the application’s services along with a count of how many times it was accessed.
+アプリケーションの各サービスが何回アクセスされたかのカウントとともに一覧表示されていることを確認してください。
 
 image::istio-prometheus-console.png[Prometheus console, 700]
 
-You can also graph the results over time by clicking on the _Graph_ tab (adjust the timeframe from 1 hour to 1 minute for example):
+また、 _Graph_ タブをクリックすることで、結果を時間経過とともにグラフ化することもできます（例えば、時間枠を1時間から1分に調整）。
 
 image::istio-prometheus-graph.png[Prometheus graph, 700]
 
-Other expressions to try:
+他の expression も試してみましょう:
 
-* Total count of all requests to _productpage_ service:
+* _productpage_ サービスへの全リクエスト数の合計:
 
 [source,sh,role="copypaste"]
 ----
 istio_request_duration_milliseconds_count{destination_service=~"productpage.*"}
 ----
 
-* Total count of all requests to _v3_ of the _reviews_ service:
+* _reviews_ サービスの _v3_ への全リクエスト数の合計:
 
 [source,sh,role="copypaste"]
 ----
 istio_request_duration_milliseconds_count{destination_service=~"reviews.*", destination_version="v3"}
 ----
 
-* Rate of requests over the past 5 minutes to all _productpage_ services:
+* 全ての _productpage_ サービスへの過去5分間のリクエストレート:
 
 [source,sh,role="copypaste"]
 ----
 rate(istio_request_duration_milliseconds_count{destination_service=~"productpage.*", response_code="200"}[5m])
 ----
 
-There are many, many different queries you can perform to extract the data you need. Consult the https://prometheus.io/docs[Prometheus documentation] for more detail.
+必要なデータを抽出するために実行できるクエリは、非常に多くの異なるものがあります。詳細は https://prometheus.io/docs[Prometheusドキュメント] を参照してください。
 
-=== 4. Visualizing Metrics with Grafana
+=== 4. Grafanaによるメトリクスの可視化
 
-As the number of services and interactions grows in your application, this style of metrics may be a bit overwhelming. https://grafana.com/[Grafana^] provides a visual representation of many available Prometheus metrics extracted from the Istio data plane and can be used to quickly spot problems and take action.
+アプリケーションでサービスやインタラクションの数が増えてくると、このスタイルのメトリクスには少し圧倒されるかもしれません。
+https://grafana.com/[Grafana^] は、Istio データプレーンから抽出された多くの利用可能な Prometheus メトリクスを視覚的に表現し、問題を迅速に発見して対策を講じるために使用できます。
 
-Open the https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^]
+https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^] を開きます。
 
-You should see _OpenShift Login_ screen. Enter the username and password as below and click _Log In_. If you have _Requested permissions_ to authorize access Prometheus, click on *Allow selected permissions*. Then, you will see Prometheus home screen, similar to this:
+_OpenShift Login_ の画面が表示されるはずです。ユーザー名とパスワードを入力し、 _Log In_ をクリックします。Prometheusへのアクセスを許可するために _Requested permissions_ を持っている場合は、 *Allow selected permissions* をクリックしてください。すると、このような Prometheus のホーム画面が表示されます:
 
 image::grafana-home.png[Grafana graph, 700]
 
-==== Istio Mesh Metrics
+==== Istio Mesh メトリクス
 
-Select *Dashboard Icon > Manage > Istio > Istio Mesh Dashboard* to see Istio mesh metrics:
+*Dashboard Icon > Manage > Istio > Istio Mesh Dashboard* を選択して、Istio meshメトリクスを表示します:
 
 image::grafana-mesh-metrics-select.png[Grafana graph, 700]
 
-You will see the built-in Istio metrics dashboard:
+ビルトインの Istio メトリクス・ダッシュボードが表示されます:
 
 image::grafana-mesh-metrics.png[Grafana graph, 700]
 
-==== Istio Service Metrics
+==== Istio Service メトリクス
 
-Let’s see detailed metrics of the *productpage* service. Click on *productpage.{{ USER_ID }}-bookinfo.svc.cluster.local* and the service dashboard will look similar to this:
+それでは、 *productpage* サービスの詳細なメトリクスを見てみましょう。 *productpage.{{ USER_ID }}-bookinfo.svc.cluster.local* をクリックすると、サービスダッシュボードは以下のようになります:
 
 image::grafana-service-metrics.png[Grafana graph, 700]
 
-The Grafana Dashboard for Istio consists of three main sections:
+Istio用のGrafana Dashboardは、3つの主要なセクションで構成されています:
 
-* _A Global Summary View_ provides a high-level summary of HTTP requests flowing through the service mesh.
-* _A Mesh Summary View_ provides slightly more detail than the Global Summary View, allowing per-service filtering and selection.
-* _Individual Services View_ provides metrics about requests and responses for each individual service within the mesh (HTTP and TCP).
+* _Global Summary View_ は、サービスメッシュを流れる HTTP リクエストのハイレベルなサマリーを提供します。
+* _Mesh Summary View_ は、グローバルサマリービューよりも若干詳細な情報を提供し、サービスごとのフィルタリングと選択を可能にします。
+* _Individual Services View_ は、メッシュ内の各個別サービス (HTTP と TCP) のリクエストとレスポンスに関するメトリクスを提供します。
 
 [NOTE]
 ====
-_TCP Bandwidth_ metrics are empty, as Bookinfo uses http-based services only. Lower down on this dashboard are metrics for workloads that call this service (labeled ``Client Workloads'') and for workloads that process requests from the service (labeled _Service Workloads_).
+Bookinfoはhttpベースのサービスのみを使用しているため、 _TCP Bandwidth_ のメトリクスは空欄になっています。ダッシュボードの下の方には、このサービスを呼び出すワークロード(``Client Workloads'' と表示されている)と、このサービスからのリクエストを処理するワークロード( _Service Workloads_ と表示されている)のメトリクスが表示されています。
 ====
 
-You can switch to a different service or filter metrics by _client-_ and _service-workloads_ by using drop-down lists at the top of the dashboard.
+ダッシュボードの上部にあるドロップダウン・リストを使用して、別のサービスに切り替えたり、 _client-_ および _service-workloads_ でメトリクスをフィルタリングしたりできます。
 
-==== Istio Workload Metrics
+==== Istio Workload メトリクス
 
-To switch to the workloads dashboard, select *Dashboard Icon > Manage > Istio > Istio Workload Dashboard* from the drop-down list in the top left corner of the screen. You should see a screen similar to this:
+ワークロードダッシュボードに切り替えるには、画面左上隅のドロップダウンリストから *Dashboard Icon > Manage > Istio > Istio Workload Dashboard* を選択します。このような画面が表示されるはずです:
 
 image::grafana-workload-metrics.png[Grafana graph, 700]
 
-This dashboard shows workload’s metrics, and metrics for client-(inbound) and service (outbound) workloads. You can switch to a different workload, ot filter metrics by inbound or outbound workloads by using drop-down lists at the top of the dashboard.
+このダッシュボードには、ワークロードのメトリクスと、クライアント(インバウンド)とサービス(アウトバウンド)のワークロードのメトリクスが表示されます。ダッシュボードの上部にあるドロップダウンリストを使って、別のワークロードに切り替えたり、インバウンドまたはアウトバウンドのワークロードでメトリクスをフィルタリングしたりすることができます。
 
-For more on how to create, configure, and edit dashboards, please see the http://docs.grafana.org/[Grafana documentation^].
+ダッシュボードの作成、設定、編集方法については、 http://docs.grafana.org/[Grafana documentation^] を参照してください。
 
-As a developer, you can get quite a bit of information from these metrics without doing anything to the application itself. Let’s use our new tools in the next section to see the real power of Istio to diagnose and fix issues in applications and make them more resilient and robust.
+開発者としては、アプリケーション自体に何もしなくても、これらのメトリクスからかなりの情報を得ることができます。次のセクションでは、新しいツールを使って、アプリケーションの問題を診断して修正し、アプリケーションをより回復力のある堅牢なものにするための Istio の真の力を見てみましょう。
 
-=== 5. Request Routing
+=== 5. リクエストルーティング
 
-This task shows you how to configure dynamic request routing based on weights and HTTP headers.
+このタスクでは、ウェイトと HTTP ヘッダーに基づいて動的なリクエストルーティングを設定する方法を示します。
 
-_Route rules_ control how requests are routed within an Istio service mesh. Route rules provide:
+_Route rules_ は、Istio サービスメッシュ内でリクエストがどのようにルーティングされるかを制御します。 Route ruleは以下を提供します:
 
-* **Timeouts** to minimize wait times for slow services
-* **Bounded retries** with timeout budgets and variable jitter between retries
-* **Limits** on number of concurrent connections and requests to upstream services
-* **Active (periodic) health checks** on each member of the load balancing pool
-* **Fine-grained circuit breakers** (passive health checks) – applied per instance in the load balancing pool
+* **Timeouts** 遅いサービスの待ち時間を最小限に抑える
+* **Bounded retries** タイムアウトバジェットとリトライ間のジッターを可変にする
+* **Limits** アップストリームサービスへの同時接続数とリクエスト数を制限する
+* **Active (periodic) health checks** ロードバランシングプールの各メンバーのアクティブな（定期的な）ヘルスチェックを行う
+* **Fine-grained circuit breakers** 細粒度のサーキットブレーカー（パッシブヘルスチェック） - ロードバランシングプールのインスタンスごとに適用される
 
-Requests can be routed based on the source and destination, HTTP header fields, and weights associated with individual service versions. For example, a route rule could route requests to different versions of a service.
+リクエストは、送信元と送信先、HTTP ヘッダーフィールド、個々のサービスのバージョンに関連付けられた重みに基づいてルーティングすることができます。たとえば、route rule はリクエストをサービスの異なるバージョンにルーティングすることができます。
 
-Together, these features enable the service mesh to tolerate failing nodes and prevent localized failures from cascading instability to other nodes. However, applications must still be designed to deal with failures by taking appropriate fallback actions. For example, when all instances in a load balancing pool have failed, Istio will return HTTP 503. It is the responsibility of the application to implement any fallback logic that is needed to handle the HTTP 503 error code from an upstream service.
+これらの機能を組み合わせることで、サービスメッシュは故障したノードを許容し、局所的な故障が他のノードに不安定性を連鎖させることを防ぐことができます。しかし、アプリケーションは、適切なフォールバック・アクションを取ることで障害に対処するように設計されていなければなりません。たとえば、ロードバランシングプール内のすべてのインスタンスが故障した場合、Istio は HTTP 503 を返します。アップストリームサービスからのHTTP 503エラーコードを処理するために必要なフォールバックロジックを実装するのはアプリケーションの責任です。
 
-If your application already provides some defensive measures (e.g. using https://github.com/Netflix/Hystrix[Netflix Hystrix^]), then that’s OK. *Istio* is completely transparent to the application. A failure response returned by Istio would not be distinguishable from a failure response returned by the upstream service to which the call was made.
+アプリケーションがすでに何らかの防御手段を提供している場合(https://github.com/Netflix/Hystrix[Netflix Hystrix^] を使用するなど)は、それでOKです。 *Istio* はアプリケーションからは完全に透過的です。Istioによって返された失敗応答は、呼び出しが行われた上流のサービスによって返された失敗応答と区別できません。
 
-=== 6. Service Versions
+=== 6. サービスバージョン
 
-Istio introduces the concept of a service version, which is a finer-grained way to subdivide service instances by versions (_v1_, _v2_) or environment (_staging_, _prod_). These variants are not necessarily different API versions: they could be iterative changes to the same service, deployed in different environments (prod, staging, dev, etc.). Common scenarios where this is used include A/B testing or canary rollouts. Istio’s https://istio.io/latest/docs/concepts/traffic-management/#routing-rules[traffic routing rules^] can refer to service versions to provide additional control over traffic between services.
+Istioはサービスバージョンというコンセプトを導入しました。これは、サービスインスタンスをバージョン (_v1_, _v2_) や環境 (_staging_, _prod_) によって細分化するためのより細かい方法です。これらのバリエーションは必ずしも異なる API のバージョンである必要はありません: 同じサービスを異なる環境 (prod, staging, dev など) にデプロイして反復的に変更することができます。これが使用される一般的なシナリオとしては、A/B テストやカナリーロールアウトなどがあります。Istioの https://istio.io/latest/docs/concepts/traffic-management/#routing-rules[traffic routing rules^] は、サービス間のトラフィックを追加で制御するためのサービスバージョンを参照することができます。
 
 image::versions.png[Versions, 500]
 
-As illustrated in the figure above, clients of a service have no knowledge of different versions of the service. They can continue to access the services using the hostname/IP address of the service. The Envoy sidecar/proxy intercepts and forwards all requests/responses between the client and the service.
+上の図に示すように、サービスのクライアントは、サービスの異なるバージョンを知ることはありません。クライアントは、サービスのホスト名/IPアドレスを使用してサービスにアクセスし続けることができます。Envoyサイドカー/プロキシは、クライアントとサービス間のすべてのリクエスト/レスポンスをインターセプトして転送します。
 
-=== 7. VirtualService objects
+=== 7. VirtualServiceオブジェクト
 
-In addition to the usual OpenShift object types like _BuildConfig_, _DeploymentConfig_, _Service_ and _Route_, you also have new object types installed as part of Istio like _VirtualService_. Adding these objects to the running OpenShift cluster is how you configure routing rules for Istio.
+_BuildConfig_ 、_DeploymentConfig_ 、_Service_ 、_Route_ などの通常のOpenShiftオブジェクトタイプに加えて、 _VirtualService_ などの新しいオブジェクトタイプもIstioの一部としてインストールされています。これらのオブジェクトを実行中のOpenShiftクラスタに追加することで、Istioのルーティングルールを構成することができます。
 
-For our application, without an explicit default route set, Istio will route requests to all available versions of a service in a round-robin fashion, and anytime you hit _v1_ version you’ll get no stars.
+私たちのアプリケーションでは、明示的なデフォルトのルート設定がなく、Istioはラウンドロビン方式でサービスのすべての利用可能なバージョンにリクエストをルーティングし、 _v1_ バージョンにヒットした場合はいつでも星はつきません。
 
-Let’s create a default set of *virtual services* which will direct all traffic to the _reviews:v1_ service version.
+すべてのトラフィックを _reviews:v1_ サービスバージョンに誘導する *virtual services* のデフォルトセットを作成してみましょう。
 
-Open a new Terminal (while your other endless `for` loop continues to run) and execute this command to route all traffic to `v1`:
+新しいターミナルを開き(他のエンドレスな `for` ループが実行されている間)、このコマンドを実行してすべてのトラフィックを `v1` にルーティングします:
 
 [source, shell, role="copypaste"]
 ----
 oc create -n {{ USER_ID}}-bookinfo -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2m3-labs/istio/virtual-service-all-v1.yaml
 ----
 
-You can see this default set of _virtual services_ with:
+このデフォルトの _virtual services_ のセットは、以下で見ることができます:
 
 [source, shell, role="copypaste"]
 ----
 oc get virtualservices -n {{ USER_ID}}-bookinfo -o yaml
 ----
 
-There are default _virtual services_ for each service, such as the one that forces all traffic to the _v1_ version of the _reviews_ service:
+各サービスにはデフォルトの _virtual services_ があり、例えば、すべてのトラフィックを _reviews_ サービスの _v1_ バージョンに強制するものなどがあります:
 
 [source, shell, role="copypaste"]
 ----
@@ -317,29 +317,29 @@ spec:
         subset: v1
 ----
 
-Now, access the application again in your web browser using the below link and reload the page several times - you should not see any rating stars since *reviews:v1* does not access the _ratings_ service.
+さて、以下のリンクを使用してWebブラウザでアプリケーションに再度アクセスし、ページを数回リロードしてください - *reviews:v1* が _ratings_ サービスにアクセスしていないので、評価の星は表示されないはずです。
 
 [NOTE]
 ====
-It may take a minute or two for the new routing to take effect. If you still see red or black stars, wait a minute and try again.
-Eventually it should no longer show any red/black stars.
+新しいルーティングが有効になるまで1～2分かかる場合があります。それでも赤や黒の星が表示される場合は、1分ほど待ってからもう一度試してみてください。
+やがて赤や黒の星が表示されなくなるはずです。
 ====
 
-To verify this, access the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] and ensure you have no rating stars:
+これを確認するには、 http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] にアクセスして、評価の星がないことを確認してください:
 
 image::ratings-stopped-bookinfo.png[Versions, 700]
 
-Back on the https://grafana-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^], Select the *Istio Service Dashboard*, and then select the `ratings.{{USER_ID}}-bookinfo.svc.cluster.local` service in the _Service_ dropdown:
+https://grafana-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN }}[Grafana console^] に戻り、 *Istio Service Dashboard* を選択し、 _Service_ ドロップダウンで `ratings.{{USER_ID}}-bookinfo.svc.cluster.local` サービスを選択します:
 
 image::ratings-select-dash.png[Versions, 700]
 
-Notice that the requests coming from the reviews service have stopped:
+reviewsサービスからのリクエストが停止していることに注意してください:
 
 image::ratings-stopped.png[Versions, 700]
 
-=== 8. A/B Testing with Istio
+=== 8. IstioによるA/Bテスト
 
-Let’s enable the ratings service for a test user named _jason_ by routing `productpage` traffic to _reviews:v2_ (black stars) and any others to _reviews:v3_ (red stars). Execute:
+_jason_ というテストユーザのために、 `productpage` のトラフィックを _reviews:v2_ (黒い星) に、その他のトラフィックを _reviews:v3_ (赤い星) にルーティングして、評価サービスを有効にしてみましょう。以下を実行します:
 
 [source, shell, role="copypaste"]
 ----
@@ -348,18 +348,17 @@ oc apply -n {{ USER_ID}}-bookinfo -f $CHE_PROJECTS_ROOT/cloud-native-workshop-v2
 
 [TIP]
 ====
-You can ignore warnings like _Warning: oc apply should be used on resource created by either oc create –save-config or oc apply_.
+次のような警告は無視してかまいません "_Warning: oc apply should be used on resource created by either oc create –save-config or oc apply_"
 ====
 
-
-Confirm the rule is created:
+ルールが作成されたことを確認します:
 
 [source, shell, role="copypaste"]
 ----
 oc get virtualservices/reviews -n {{ USER_ID}}-bookinfo -o yaml
 ----
 
-Notice the _match_ element:
+_match_ 要素に注目してください:
 
 [source,yaml]
 ----
@@ -378,29 +377,29 @@ http:
         subset: v3
 ----
 
-This says that for any incoming HTTP request that has a cookie set to the _jason_ user to direct traffic to *reviews:v2*, and others to *reviews:v3*.
+これは、 _jason_ ユーザーがセットされたクッキーを含むすべての着信 HTTP リクエストトラフィックを *reviews:v2* に、その他のトラフィックを *reviews:v3* に送信せよと言っています。
 
-Now, access the http://istio-ingressgateway-{{ USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] and click *Sign In* (at the upper right) and sign in with:
+さて、 http://istio-ingressgateway-{{USER_ID }}-istio-system.{{ ROUTE_SUBDOMAIN}}/productpage[Bookinfo Product Page^] にアクセスし、 *Sign In* (右上)をクリックしてサインインします:
 
 * Username: *jason*
 * Password: *jason*
 
 [NOTE]
 ====
-If you get any certificate security exceptions, just accept them and continue. This is due to the use of self-signed certs.
+証明書のセキュリティ上の例外が発生した場合は、それを受け入れて続行するだけです。これは、自己署名証明書を使用しているためです。
 ====
 
-Once you login, refresh a few times - you should always see the black ratings stars coming from *ratings:v2* since you’re signed in as `jason`.
+ログインしたら、ブラウザを何度かリフレッシュしてください - あなたは `jason` としてログインしているので、常に *ratings:v2* から黒いレーティングスターが表示されているはずです。
 
 image::ratings-testuser.png[Ratings for Test User, 700]
 
-If you *sign out*, you’ll return to the *reviews:v3* version which shows red ratings stars.
+*サインアウト* すると、赤い評価の星が表示される *reviews:v3* 版に戻ります。
 
 image::ratings-signout.png[Ratings for Test User, 700]
 
-*Congratulations!* In this lab, you used Istio to send 100% of the traffic to the a specific version of one of the application’s services. You then set a
-rule to selectively send traffic to other versions of based on matching criteria (e.g. a header or user cookie) in a request.
+*おめでとうございます!* このラボでは、Istioを使用して、アプリケーションのサービスの特定のバージョンに100%のトラフィックを送信しました。次に
+ルールを使用して、リクエスト中の条件 (例: ヘッダやユーザクッキー) にマッチするものに基づいて、他のバージョンのトラフィックを選択的に送信しました。
 
-This routing allows you to selectively send traffic to different service instances, e.g. for testing, or blue/green deployments, or dark launches, and more.
+このルーティング機能により、テスト、ブルー/グリーンデプロイメント、ダークローンチなどにおいて、異なるサービスインスタンスにトラフィックを選択的に送信することができます。
 
-We’ll explore this in the next step.
+これを次のステップで探っていきます。
