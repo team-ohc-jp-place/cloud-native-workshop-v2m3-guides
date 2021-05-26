@@ -52,7 +52,7 @@ image::che-login.png[cdw, 700]
 
 image::crw-landing.png[cdw, 700]
 
-You can also click on the name of the workspace in the center, and then click on the green {{ USER_ID}}-namespace that says _Open_ on the top right hand side of the screen:
+また、中央のワークスペース名をクリックし、画面右上の _Open_ と書かれた緑色の {{ USER_ID}}-namespace をクリックすることもできます。:
 
 image::crw-landing-start.png[cdw, 700]
 
